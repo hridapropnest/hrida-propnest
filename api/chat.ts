@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenAI } from "@google/genai";
+import { db } from "./firebaseAdmin";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
