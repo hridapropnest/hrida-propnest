@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  /* INVERTING STONE FOR LIGHT THEME: White and Beige as Primary, espresso-brown as Secondary/Text */
+  --color-stone-50: #120904;   /* Absolute boldest cacao-black text */
+  --color-stone-100: #1a0e06;  /* Extremely dark espresso primary headings */
+  --color-stone-200: #231409;  /* Deep dark cocoa body text */
+  --color-stone-300: #2f1a0e;  /* Rich hazelnut brown secondary text */
+  --color-stone-400: #3a2211;  /* Medium warm wood accent text (darkened for legibility!) */
+  --color-stone-500: #472d1a;  /* Soft caramel brown (darkened for legibility!) */
+  --color-stone-600: #573a24;  /* Rich bronze-brown (darkened for legibility!) */
+  --color-stone-700: #a5896e;  /* Almond-beige accents */
+  --color-stone-800: #d6c4b2;  /* Warm luxury beige borders/dividers */
+  --color-stone-900: #f0e6d6;  /* Beautiful light sand-beige card background */
+  --color-stone-950: #faf7f2;  /* Radiant linen-white page background */
+
+  /* Map White and Black to complete the Light-Theme inversion elegantly */
+  --color-white: #120904;      /* All text-white classes render in deep espresso-black */
+  --color-black: #faf7f2;      /* All text-black classes render in clean linen-white on dark badges */
+
+  /* Overriding Cyan with radiant Champagne Gold and Bronze */
+  --color-cyan-50: #fcf9f2;
+  --color-cyan-100: #f7eeda;
+  --color-cyan-200: #ecdbb4;
+  --color-cyan-300: #dcbe82;
+  --color-cyan-400: #c59b58;  /* Gold leaf */
+  --color-cyan-500: #aa814c;  /* Warm honey bronze */
+  --color-cyan-600: #8f653a;  /* Soft chocolate bronze */
+  --color-cyan-700: #714e2c;
+  --color-cyan-800: #563920;
+  --color-cyan-900: #3e2716;
+  --color-cyan-950: #23150b;
+
+  /* Overriding Teal with rich Wood-Brown and Cacao */
+  --color-teal-50: #faf6f0;
+  --color-teal-100: #eeded1;
+  --color-teal-200: #dfcfbc;
+  --color-teal-300: #cca985;
+  --color-teal-400: #a88868;  /* Warm wood tan */
+  --color-teal-500: #856345;  /* Deep roasted bronze */
+  --color-teal-600: #5c412c;
+  --color-teal-700: #3c2a1c;
+  --color-teal-800: #291c12;
+  --color-teal-900: #1a120c;
+  --color-teal-950: #0f0a06;
+
+  --color-brand-cyan: #aa814c;
+  --color-brand-teal: #856345;
+}
+
+/* Custom styles for grid lines and transitions */
+.grid-lines {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(212, 188, 123, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(212, 188, 123, 0.03) 1px, transparent 1px);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(19, 12, 8, 0.6);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(212, 188, 123, 0.2);
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 188, 123, 0.4);
+}
+

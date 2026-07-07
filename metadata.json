@@ -1,0 +1,6 @@
+{
+  "name": "Hrida Propnest",
+  "description": "Elite luxury real estate broker in India featuring responsive Three.js 3D background scroll animation, custom buy/rent listing showcases, and custom property listing integrations.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
