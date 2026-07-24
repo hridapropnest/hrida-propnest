@@ -3,74 +3,82 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", sans-serif;
+  --font-serif: "Cinzel", Georgia, serif;
   --font-mono: "JetBrains Mono", monospace;
   
-  /* INVERTING STONE FOR LIGHT THEME: White and Beige as Primary, espresso-brown as Secondary/Text */
-  --color-stone-50: #120904;   /* Absolute boldest cacao-black text */
-  --color-stone-100: #1a0e06;  /* Extremely dark espresso primary headings */
-  --color-stone-200: #231409;  /* Deep dark cocoa body text */
-  --color-stone-300: #2f1a0e;  /* Rich hazelnut brown secondary text */
-  --color-stone-400: #3a2211;  /* Medium warm wood accent text (darkened for legibility!) */
-  --color-stone-500: #472d1a;  /* Soft caramel brown (darkened for legibility!) */
-  --color-stone-600: #573a24;  /* Rich bronze-brown (darkened for legibility!) */
-  --color-stone-700: #a5896e;  /* Almond-beige accents */
-  --color-stone-800: #d6c4b2;  /* Warm luxury beige borders/dividers */
-  --color-stone-900: #f0e6d6;  /* Beautiful light sand-beige card background */
-  --color-stone-950: #faf7f2;  /* Radiant linen-white page background */
+  /* PREMIUM LUXURY DARK THEME: Matte Black background, Sand/Linen text */
+  --color-stone-50: #faf7f5;   /* Radiant warm white text */
+  --color-stone-100: #f4ece6;  /* Soft sand for primary headings */
+  --color-stone-200: #e4d7cd;  /* Sand-grey for body text */
+  --color-stone-300: #cbbab0;  /* Muted sand secondary text */
+  --color-stone-400: #a79285;  /* Soft bronze-grey text */
+  --color-stone-500: #7d6b5e;  /* Medium bronze-grey */
+  --color-stone-600: #5c4e43;  /* Soft card outline */
+  --color-stone-700: #3c322b;  /* Dark card border */
+  --color-stone-800: #231d1a;  /* Dark card background */
+  --color-stone-900: #120e0c;  /* Deep interface elements */
+  --color-stone-950: #0a0807;  /* Pure luxury matte black page background */
 
-  /* Map White and Black to complete the Light-Theme inversion elegantly */
-  --color-white: #120904;      /* All text-white classes render in deep espresso-black */
-  --color-black: #faf7f2;      /* All text-black classes render in clean linen-white on dark badges */
+  /* Restore standard White and Black variables */
+  --color-white: #ffffff;
+  --color-black: #000000;
 
-  /* Overriding Cyan with radiant Champagne Gold and Bronze */
-  --color-cyan-50: #fcf9f2;
-  --color-cyan-100: #f7eeda;
-  --color-cyan-200: #ecdbb4;
-  --color-cyan-300: #dcbe82;
-  --color-cyan-400: #c59b58;  /* Gold leaf */
-  --color-cyan-500: #aa814c;  /* Warm honey bronze */
-  --color-cyan-600: #8f653a;  /* Soft chocolate bronze */
-  --color-cyan-700: #714e2c;
-  --color-cyan-800: #563920;
-  --color-cyan-900: #3e2716;
-  --color-cyan-950: #23150b;
+  /* Overriding Cyan with radiant Champagne Gold (matches reflective gold in logo) */
+  --color-cyan-50: #fcfbf7;
+  --color-cyan-100: #f7f2e1;
+  --color-cyan-200: #ebe1bf;
+  --color-cyan-300: #dcc893;
+  --color-cyan-400: #cca85f;  /* Gold leaf */
+  --color-cyan-500: #b38e46;  /* Reflective gold */
+  --color-cyan-600: #947131;  /* Deep gold */
+  --color-cyan-700: #745524;
+  --color-cyan-800: #583e18;
+  --color-cyan-900: #402c11;
+  --color-cyan-950: #231808;
 
-  /* Overriding Teal with rich Wood-Brown and Cacao */
-  --color-teal-50: #faf6f0;
-  --color-teal-100: #eeded1;
-  --color-teal-200: #dfcfbc;
-  --color-teal-300: #cca985;
-  --color-teal-400: #a88868;  /* Warm wood tan */
-  --color-teal-500: #856345;  /* Deep roasted bronze */
-  --color-teal-600: #5c412c;
-  --color-teal-700: #3c2a1c;
-  --color-teal-800: #291c12;
-  --color-teal-900: #1a120c;
-  --color-teal-950: #0f0a06;
+  /* Overriding Teal with rich Wood-Bronze and Cacao */
+  --color-teal-50: #fbfaf8;
+  --color-teal-100: #f3eee6;
+  --color-teal-200: #e4dacb;
+  --color-teal-300: #cdbba6;
+  --color-teal-400: #b0987f;  /* Warm wood tan */
+  --color-teal-500: #957a5f;  /* Warm honey bronze */
+  --color-teal-600: #745d47;
+  --color-teal-700: #574433;
+  --color-teal-800: #3f3024;
+  --color-teal-900: #2c2017;
+  --color-teal-950: #18110b;
 
-  --color-brand-cyan: #aa814c;
-  --color-brand-teal: #856345;
+  --color-brand-cyan: var(--color-cyan-500);
+  --color-brand-teal: var(--color-teal-500);
 }
 
 /* Custom styles for grid lines and transitions */
 .grid-lines {
   background-size: 40px 40px;
   background-image: 
-    linear-gradient(to right, rgba(212, 188, 123, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(212, 188, 123, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(204, 168, 95, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(204, 168, 95, 0.02) 1px, transparent 1px);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(19, 12, 8, 0.6);
+  background: rgba(10, 8, 7, 0.6);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(212, 188, 123, 0.2);
+  background: rgba(204, 168, 95, 0.2);
   border-radius: 3px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 188, 123, 0.4);
+  background: rgba(204, 168, 95, 0.4);
 }
+
+/* Marquee ticker animation */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
+}
+
 

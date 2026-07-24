@@ -32,7 +32,7 @@ import { AIChat } from "./components/AIChat";
 import { LeadDashboard } from "./components/LeadDashboard";
 import { ThreeBackground } from "./components/ThreeBackground";
 import { BrokerAccessModal } from "./components/BrokerAccessModal";
-import { ComingSoon } from "./components/ComingSoon";
+import { ComingSoon, HpLogo } from "./components/ComingSoon";
 
 export function WhatsAppIcon({ size = 16, className = "" }: { size?: number; className?: string }) {
   return (
@@ -117,7 +117,7 @@ export default function App() {
         console.error("Failed to parse stored properties:", e);
       }
     }
-    return [];
+    return DEFAULT_PROPERTIES;
   });
 
   // Fetch properties from server on mount
@@ -126,11 +126,11 @@ export default function App() {
       try {
         const res = await fetch("/api/properties");
 
-if (!res.ok) {
-    throw new Error("Unable to fetch properties.");
-}
+        if (!res.ok) {
+            throw new Error("Unable to fetch properties.");
+        }
 
-const data = await res.json();
+        const data = await res.json();
         if (data.success) {
           if (Array.isArray(data.properties) && data.properties.length > 0) {
             setProperties(data.properties);
@@ -139,7 +139,8 @@ const data = await res.json();
           }
         }
       } catch (err) {
-        console.error("Failed to fetch properties from server:", err);
+        console.error("Failed to fetch properties from server, using local data source fallback:", err);
+        setProperties(prev => prev.length === 0 ? DEFAULT_PROPERTIES : prev);
       }
     };
     fetchProps();
@@ -172,8 +173,8 @@ const data = await res.json();
   };
 
   // State variables for routing tabs
-  // "home" -> Custom Landing Home page, "buy" -> Buy Properties, "rent" -> Rent Properties, "list" -> List Owner Property Form
-  const [currentTab, setCurrentTab] = useState<"home" | "buy" | "rent" | "list">("home");
+  // "home" -> Custom Landing Home page, "projects" -> Luxury Projects portfolio, "about" -> About Us page
+  const [currentTab, setCurrentTab] = useState<"home" | "projects" | "about">("home");
   
   // Selected property for detailed modal or slide presentation
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -262,11 +263,12 @@ const data = await res.json();
     }, 150);
   };
 
-  // Filter properties based on Tab (buy/rent), Location, and Search query
+  // Filter properties based on Tab, Location, and Search query
   const filteredProperties = properties.filter(p => {
-    // 1. Filter by buy/rent tab
-    const targetPurpose = currentTab === "home" ? "buy" : currentTab;
-    if (p.purpose !== targetPurpose) return false;
+    // 1. Filter by tab purpose (home shows buy, projects shows all)
+    if (currentTab === "home") {
+      if (p.purpose !== "buy") return false;
+    }
 
     // 2. Filter by selected geographical city
     if (selectedArea !== "All Locations") {
@@ -366,9 +368,7 @@ const data = await res.json();
     setSelectedProperty(propertiesOfSameTab[prevIndex]);
   };
 
-  if (!isVipUnlocked) {
-    return <ComingSoon onUnlock={() => setIsVipUnlocked(true)} />;
-  }
+
 
   return (
     <div className="relative min-h-screen bg-stone-950 font-sans text-stone-100 overflow-x-hidden selection:bg-cyan-500 selection:text-black">
@@ -381,49 +381,43 @@ const data = await res.json();
         <div className="flex items-center justify-between border-b border-stone-800/60 pb-4 bg-stone-950/40 backdrop-blur-md rounded-b-xl px-4">
           
           {/* Logo Brand */}
-          <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => { setIsDetailView(false); setCurrentTab("home"); handleLogoClick(); }}>
-            <motion.span 
-              initial={{ rotate: -10, scale: 0.9 }}
-              animate={{ rotate: 0, scale: 1 }}
-              transition={{ type: "spring", duration: 0.6 }}
-              className="font-display font-black text-2xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 italic"
-            >
-              HRIDA
-            </motion.span>
-            <div className="rounded-full bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 text-[9px] font-mono font-bold tracking-widest text-cyan-400 uppercase">
-              PROPNEST
+          <div className="flex items-center gap-2.5 cursor-pointer select-none" onClick={() => { setIsDetailView(false); setCurrentTab("home"); handleLogoClick(); }}>
+            <HpLogo className="w-9 h-9" glow={false} />
+            <div className="flex flex-col">
+              <span className="font-serif font-bold text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-cyan-100 via-cyan-400 to-cyan-600 uppercase leading-none">
+                HRIDA
+              </span>
+              <span className="text-[7px] font-sans font-black tracking-[0.3em] text-cyan-400 uppercase leading-none mt-1">
+                — PROPNEST —
+              </span>
+              <span className="text-[5px] font-sans font-bold tracking-[0.4em] text-cyan-400/80 uppercase leading-none mt-1 pl-0.5">
+                FIND | INVEST | GROW
+              </span>
             </div>
           </div>
 
-          {/* Tab Navigation: HOME, BUY, RENT, LIST A PROPERTY */}
+          {/* Tab Navigation: HOME, PROJECTS, ABOUT US */}
           <div className="hidden md:flex items-center gap-2 bg-stone-900/60 p-1 rounded-full border border-stone-800/80">
             <button 
               id="tab-home-nav"
               onClick={() => { setCurrentTab("home"); setIsDetailView(false); }}
-              className={`px-4 py-2 rounded-full text-xs font-display font-bold uppercase tracking-wider transition-all ${currentTab === "home" && !isDetailView ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-black shadow font-bold' : 'text-stone-400 hover:text-white'}`}
+              className={`px-5 py-2 rounded-full text-xs font-display font-bold uppercase tracking-wider transition-all ${currentTab === "home" && !isDetailView ? 'bg-cyan-500 text-black shadow font-bold' : 'text-stone-400 hover:text-white'}`}
             >
               Home
             </button>
             <button 
-              id="tab-buy-nav"
-              onClick={() => { setCurrentTab("buy"); setIsDetailView(false); }}
-              className={`px-4 py-2 rounded-full text-xs font-display font-bold uppercase tracking-wider transition-all ${currentTab === "buy" && !isDetailView ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-black shadow' : 'text-stone-400 hover:text-white'}`}
+              id="tab-projects-nav"
+              onClick={() => { setCurrentTab("projects"); setIsDetailView(false); }}
+              className={`px-5 py-2 rounded-full text-xs font-display font-bold uppercase tracking-wider transition-all ${currentTab === "projects" && !isDetailView ? 'bg-cyan-500 text-black shadow font-bold' : 'text-stone-400 hover:text-white'}`}
             >
-              Buy
+              Projects
             </button>
             <button 
-              id="tab-rent-nav"
-              onClick={() => { setCurrentTab("rent"); setIsDetailView(false); }}
-              className={`px-4 py-2 rounded-full text-xs font-display font-bold uppercase tracking-wider transition-all ${currentTab === "rent" && !isDetailView ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-black shadow' : 'text-stone-400 hover:text-white'}`}
+              id="tab-about-nav"
+              onClick={() => { setCurrentTab("about"); setIsDetailView(false); }}
+              className={`px-5 py-2 rounded-full text-xs font-display font-bold uppercase tracking-wider transition-all ${currentTab === "about" && !isDetailView ? 'bg-cyan-500 text-black shadow font-bold' : 'text-stone-400 hover:text-white'}`}
             >
-              Rent
-            </button>
-            <button 
-              id="tab-list-nav"
-              onClick={() => { setCurrentTab("list"); setIsDetailView(false); }}
-              className={`px-4 py-2 rounded-full text-xs font-display font-bold uppercase tracking-wider transition-all ${currentTab === "list" && !isDetailView ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-black shadow' : 'text-stone-400 hover:text-white'}`}
-            >
-              List Your Property
+              About Us
             </button>
           </div>
 
@@ -469,25 +463,19 @@ const data = await res.json();
                 onClick={() => { setCurrentTab("home"); setIsDetailView(false); setIsMobileMenuOpen(false); }}
                 className={`text-left py-2 text-xs font-display font-semibold uppercase tracking-wider ${currentTab === "home" ? "text-cyan-400" : "text-stone-300"}`}
               >
-                Home Landing
+                Home
               </button>
               <button 
-                onClick={() => { setCurrentTab("buy"); setIsDetailView(false); setIsMobileMenuOpen(false); }}
-                className={`text-left py-2 text-xs font-display font-semibold uppercase tracking-wider ${currentTab === "buy" ? "text-cyan-400" : "text-stone-300"}`}
+                onClick={() => { setCurrentTab("projects"); setIsDetailView(false); setIsMobileMenuOpen(false); }}
+                className={`text-left py-2 text-xs font-display font-semibold uppercase tracking-wider ${currentTab === "projects" ? "text-cyan-400" : "text-stone-300"}`}
               >
-                Buy Properties
+                Projects
               </button>
               <button 
-                onClick={() => { setCurrentTab("rent"); setIsDetailView(false); setIsMobileMenuOpen(false); }}
-                className={`text-left py-2 text-xs font-display font-semibold uppercase tracking-wider ${currentTab === "rent" ? "text-cyan-400" : "text-stone-300"}`}
+                onClick={() => { setCurrentTab("about"); setIsDetailView(false); setIsMobileMenuOpen(false); }}
+                className={`text-left py-2 text-xs font-display font-semibold uppercase tracking-wider ${currentTab === "about" ? "text-cyan-400" : "text-stone-300"}`}
               >
-                Premium Rent
-              </button>
-              <button 
-                onClick={() => { setCurrentTab("list"); setIsDetailView(false); setIsMobileMenuOpen(false); }}
-                className={`text-left py-2 text-xs font-display font-semibold uppercase tracking-wider ${currentTab === "list" ? "text-cyan-400" : "text-stone-300"}`}
-              >
-                List Your Property
+                About Us
               </button>
               <button 
                 onClick={() => { setIsDashboardOpen(true); setIsMobileMenuOpen(false); }}
@@ -539,7 +527,7 @@ const data = await res.json();
 
                     <h1 className="font-display text-4xl font-black uppercase tracking-tight text-white sm:text-6xl lg:text-7xl leading-none">
                       THE NEW STANDARDS OF <br />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 italic">
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-cyan-400 to-cyan-600 italic">
                         LUXURY LIVING
                       </span>
                     </h1>
@@ -550,71 +538,20 @@ const data = await res.json();
 
                     <div className="mt-8 flex flex-wrap justify-center gap-4">
                       <button
-                        onClick={() => setCurrentTab("buy")}
-                        className="rounded-full bg-gradient-to-r from-cyan-400 to-teal-400 text-black px-6 py-3.5 text-xs font-bold uppercase tracking-wider font-mono shadow-lg hover:shadow-cyan-400/20 transition-all cursor-pointer flex items-center gap-2"
+                        onClick={() => setCurrentTab("projects")}
+                        className="rounded-full bg-cyan-500 text-black px-6 py-3.5 text-xs font-bold uppercase tracking-wider font-mono shadow-lg hover:shadow-cyan-400/20 transition-all cursor-pointer flex items-center gap-2"
                       >
-                        <span>Acquisition Portfolio</span>
+                        <span>Explore Projects</span>
                         <ArrowRight size={14} />
                       </button>
                       <button
-                        onClick={() => setCurrentTab("rent")}
+                        onClick={() => setCurrentTab("about")}
                         className="rounded-full border border-stone-800 bg-stone-900/80 hover:border-stone-700 text-stone-300 hover:text-white px-6 py-3.5 text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer flex items-center gap-2"
                       >
-                        <span>Premium Leases</span>
+                        <span>Contact Concierge</span>
                         <span>🏡</span>
                       </button>
                     </div>
-
-                  </div>
-
-                  {/* 3-COLUMN BEAUTIFUL EXPERIENTIAL DIRECTION CARDS */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    
-                    <div 
-                      onClick={() => setCurrentTab("buy")}
-                      className="group relative p-6 rounded-2xl border border-stone-800/80 bg-stone-900/40 backdrop-blur-sm hover:border-cyan-500/30 transition-all cursor-pointer overflow-hidden shadow-xl"
-                    >
-                      <div className="h-10 w-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-4 group-hover:scale-110 transition-transform">
-                        <Sparkles size={18} />
-                      </div>
-                      <h3 className="font-display text-lg font-bold text-white uppercase group-hover:text-cyan-400 transition-colors">Acquire Estates</h3>
-                      <p className="text-stone-400 text-xs mt-2 leading-relaxed">Browse curated high-fashion penthouses, luxury duplexes, and seaside retreats starting at 60 lakhs/month.</p>
-                      <div className="mt-5 flex items-center gap-1.5 text-xs text-cyan-400 font-mono font-bold uppercase tracking-wider">
-                        <span>View Catalog</span>
-                        <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-
-                    <div 
-                      onClick={() => setCurrentTab("rent")}
-                      className="group relative p-6 rounded-2xl border border-stone-800/80 bg-stone-900/40 backdrop-blur-sm hover:border-teal-500/30 transition-all cursor-pointer overflow-hidden shadow-xl"
-                    >
-                      <div className="h-10 w-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 mb-4 group-hover:scale-110 transition-transform">
-                        <Building size={18} />
-                      </div>
-                      <h3 className="font-display text-lg font-bold text-white uppercase group-hover:text-teal-400 transition-colors">Premium Leases</h3>
-                      <p className="text-stone-400 text-xs mt-2 leading-relaxed">Discover elite Grade-A long-term rentals in golf sanctuaries and prime sectors starting at 20,000/month.</p>
-                      <div className="mt-5 flex items-center gap-1.5 text-xs text-teal-400 font-mono font-bold uppercase tracking-wider">
-                        <span>Explore Leases</span>
-                        <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-
-                    <div 
-                      onClick={() => setCurrentTab("list")}
-                      className="group relative p-6 rounded-2xl border border-stone-800/80 bg-stone-900/40 backdrop-blur-sm hover:border-emerald-500/30 transition-all cursor-pointer overflow-hidden shadow-xl"
-                    >
-                      <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-110 transition-transform">
-                        <PlusCircle size={18} />
-                      </div>
-                      <h3 className="font-display text-lg font-bold text-white uppercase group-hover:text-emerald-400 transition-colors">List Your Home</h3>
-                      <p className="text-stone-400 text-xs mt-2 leading-relaxed">Direct representation desk for private builders & owners seeking VVIP clients with absolute discretion.</p>
-                      <div className="mt-5 flex items-center gap-1.5 text-xs text-emerald-400 font-mono font-bold uppercase tracking-wider">
-                        <span>Submit Proposal</span>
-                        <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-
 
                   </div>
 
@@ -635,8 +572,8 @@ const data = await res.json();
                   </div>
 
                   {/* LUXURY EXPERT STATEMENT / BIOGRAPHY SIGNATURE */}
-                  <div className="rounded-2xl border border-amber-500/10 bg-amber-500/[0.02] p-6 sm:p-8 text-center max-w-4xl mx-auto">
-                    <span className="text-amber-400 text-xs">✦ ✦ ✦</span>
+                  <div className="rounded-2xl border border-cyan-500/10 bg-cyan-500/[0.01] p-6 sm:p-8 text-center max-w-4xl mx-auto">
+                    <span className="text-cyan-400 text-xs">✦ ✦ ✦</span>
                     <p className="italic text-stone-300 text-xs sm:text-sm mt-3 leading-relaxed">
                       "At Hrida Propnest, we don't present real estate listings; we preserve architectural heritage. From the billionaire enclaves of Altamount Road to spectacular coastal villas, every residence represents an exceptional standard of lifestyle across Mumbai. Our team secures seamless RERA-compliant acquisitions with absolute discretion."
                     </p>
@@ -647,8 +584,10 @@ const data = await res.json();
                   </div>
 
                 </div>
-              ) : (
-                /* OTHERWISE RENDER CATALOG OR OWNER FORMS */
+              ) : currentTab === "projects" ? (
+                /* ======================================================================= */
+                /* PROJECTS PORTFOLIO TAB                                                  */
+                /* ======================================================================= */
                 <>
                   {/* HERO BLOCK */}
                   <div className="relative text-center py-10 md:py-16 flex flex-col items-center">
@@ -679,82 +618,77 @@ const data = await res.json();
                       className="max-w-4xl"
                     >
                       <h1 className="font-display text-4xl font-black uppercase tracking-tight text-white sm:text-6xl lg:text-7xl leading-none">
-                        LUXURY HOMES <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 italic">
-                          IN INDIA
+                        FIND | INVEST | GROW
+                        <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-cyan-400 to-cyan-600 italic">
+                          YOUR MUMBAI LUXURY PARTNER
                         </span>
                       </h1>
+                      <motion.p
+                        transition={{ delay: 0.25 }}
+                        className="mt-4 max-w-xl text-stone-400 text-xs sm:text-sm leading-relaxed"
+                      >
+                        Acquire, lease, or list extraordinary residences across Mumbai.
+                      </motion.p>
                     </motion.div>
 
-                    <motion.p
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.25 }}
-                      className="mt-4 max-w-xl text-stone-400 text-xs sm:text-sm leading-relaxed"
-                    >
-                     Acquire, lease, or list extraordinary residences across Mumbai.
-                    </motion.p>
-
                     {/* GEOGRAPHY AREA FILTER */}
-                    {currentTab !== "list" && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.35 }}
-                        className="relative mt-6 z-30"
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35 }}
+                      className="relative mt-6 z-30"
+                    >
+                      <button
+                        id="area-dropdown-btn"
+                        onClick={() => setIsAreaDropdownOpen(!isAreaDropdownOpen)}
+                        className="flex items-center gap-2 rounded-full border border-stone-800 bg-stone-900/90 px-5 py-2.5 text-xs font-bold uppercase tracking-widest font-mono text-stone-200 hover:border-cyan-500/40 hover:bg-stone-900 transition-all cursor-pointer shadow-xl"
                       >
-                        <button
-                          id="area-dropdown-btn"
-                          onClick={() => setIsAreaDropdownOpen(!isAreaDropdownOpen)}
-                          className="flex items-center gap-2 rounded-full border border-stone-800 bg-stone-900/90 px-5 py-2.5 text-xs font-bold uppercase tracking-widest font-mono text-stone-200 hover:border-cyan-500/40 hover:bg-stone-900 transition-all cursor-pointer shadow-xl"
-                        >
-                          <Compass size={13} className="text-cyan-400" />
-                          <span>REGION: {selectedArea}</span>
-                          <span className="text-[8px] text-stone-500">▼</span>
-                        </button>
+                        <Compass size={13} className="text-cyan-400" />
+                        <span>REGION: {selectedArea}</span>
+                        <span className="text-[8px] text-stone-500">▼</span>
+                      </button>
 
-                        <AnimatePresence>
-                          {isAreaDropdownOpen && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: 10 }}
-                              className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 rounded-xl border border-stone-800 bg-stone-900 p-2 shadow-2xl z-30"
-                            >
-                              {["All Locations", "Mumbai", "Thane", "Navi Mumbai"].map((area) => (
-                                <button
-                                  key={area}
-                                  onClick={() => {
-                                    setSelectedArea(area);
-                                    setIsAreaDropdownOpen(false);
-                                  }}
-                                  className={`w-full rounded-lg px-4 py-2 text-left text-xs font-semibold font-mono tracking-wider transition-colors ${
-                                    selectedArea === area
-                                      ? "bg-cyan-500/10 text-cyan-400"
-                                      : "text-stone-400 hover:bg-stone-800 hover:text-white"
-                                  }`}
-                                >
-                                  {area === "All Locations" ? "🌍 All Regions" : area === "Mumbai" ? "🌇 Mumbai" : area === "Thane" ? "⛰️ Thane Region" : "🌊 Navi Mumbai"}
-                                </button>
-                              ))}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </motion.div>
-                    )}
+                      <AnimatePresence>
+                        {isAreaDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 rounded-xl border border-stone-800 bg-stone-900 p-2 shadow-2xl z-30"
+                          >
+                            {["All Locations", "Mumbai", "Thane", "Navi Mumbai"].map((area) => (
+                              <button
+                                key={area}
+                                onClick={() => {
+                                  setSelectedArea(area);
+                                  setIsAreaDropdownOpen(false);
+                                }}
+                                className={`w-full rounded-lg px-4 py-2 text-left text-xs font-semibold font-mono tracking-wider transition-colors ${
+                                  selectedArea === area
+                                    ? "bg-cyan-500/10 text-cyan-400"
+                                    : "text-stone-400 hover:bg-stone-800 hover:text-white"
+                                }`}
+                              >
+                                {area === "All Locations" ? "🌍 All Regions" : area === "Mumbai" ? "🌇 Mumbai" : area === "Thane" ? "⛰️ Thane Region" : "🌊 Navi Mumbai"}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
 
                   </div>
 
                   {/* BUY & RENT CARDS GRID DISPLAY */}
-                  {currentTab !== "list" ? (
-                    <div className="border-t border-stone-800/50 pt-10">
+                  <div className="border-t border-stone-800/50 pt-10">
                       
                       <div className="text-center mb-8">
                         <span className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">
-                          {currentTab === "buy" ? "Villas & Penthouses for Sale" : "Elite Multi-Lakh Monthly Rentals"}
+                          Active Luxury Portfolio
                         </span>
                         <h2 className="font-display text-xl font-bold uppercase tracking-wide text-white mt-1">
-                          {currentTab === "buy" ? "EXHIBIT COLLECTION: FOR ACQUISITION" : "EXHIBIT COLLECTION: LONG-TERM LEASES"}
+                          EXHIBIT COLLECTION: PRESTIGIOUS REAL ESTATE
                         </h2>
                       </div>
 
@@ -827,9 +761,14 @@ const data = await res.json();
                                 <span className="rounded-md bg-stone-950/90 border border-stone-800/60 px-2.5 py-1 text-[10px] font-mono tracking-wider font-semibold text-stone-300">
                                   {property.location}
                                 </span>
-                                <span className="rounded-md bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider text-cyan-400">
-                                  {property.beds} BHK
-                                </span>
+                                <div className="flex gap-1.5">
+                                  <span className={`rounded-md px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-wider ${property.purpose === "buy" ? "bg-cyan-500 text-black shadow-md" : "bg-teal-500/20 border border-teal-500/35 text-teal-300"}`}>
+                                    {property.purpose === "buy" ? "Acquisition" : "Lease"}
+                                  </span>
+                                  <span className="rounded-md bg-cyan-400/10 border border-cyan-400/20 px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider text-cyan-400">
+                                    {property.beds} BHK
+                                  </span>
+                                </div>
                               </div>
 
                               {/* Bottom info panel */}
@@ -838,7 +777,7 @@ const data = await res.json();
                                   {property.sqft.toLocaleString()} SQ FT • PRIVATE
                                 </span>
 
-                                <h3 className="font-display text-xl font-bold tracking-wide text-white group-hover:text-cyan-400 transition-colors">
+                                <h3 className="font-serif text-xl font-bold tracking-wide text-white group-hover:text-cyan-300 transition-colors">
                                   {property.name}
                                 </h3>
 
@@ -851,7 +790,7 @@ const data = await res.json();
                                     {property.priceText}
                                   </span>
 
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-950 border border-stone-800 group-hover:bg-cyan-500 group-hover:border-cyan-500 text-stone-400 group-hover:text-black transition-all">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-950 border border-stone-800 group-hover:bg-amber-400 group-hover:border-amber-400 text-stone-400 group-hover:text-black transition-all">
                                     <ChevronRight size={15} />
                                   </div>
                                 </div>
@@ -863,322 +802,191 @@ const data = await res.json();
                       )}
 
                     </div>
-                  ) : (
-                    
+                  </>
+                ) : (
                     /* ======================================================================= */
-                    /* TAB: LIST A PROPERTY OWNER SUBMISSION FORM                             */
+                    /* TAB: ABOUT US & REPRESENTATION DESK                                     */
                     /* ======================================================================= */
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="max-w-3xl mx-auto border border-stone-800 bg-stone-900/80 backdrop-blur-md rounded-2xl p-6 sm:p-10 shadow-2xl"
+                      className="space-y-12 max-w-5xl mx-auto"
                     >
-                      {listingSuccess ? (
-                        <div className="text-center py-12">
-                          <div className="h-16 w-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                            <CheckCircle2 size={36} />
-                          </div>
-                          <h3 className="font-display text-2xl font-bold text-white">Listing Submitted to Broker Desk!</h3>
-                          <p className="mt-2 text-sm text-stone-400 max-w-md mx-auto">
-                            Namaste! We have securely logged your luxury property proposal. One of our senior representatives from our premium desk will call you within 2 hours to conduct physical validation.
+                      {/* Ethos / Introduction */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-stone-900/40 border border-stone-800/80 backdrop-blur-md rounded-3xl p-8 shadow-2xl">
+                        <div className="space-y-4">
+                          <span className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">
+                            Mumbai's Elite Real Estate Boutique
+                          </span>
+                          <h2 className="font-serif text-3xl font-black text-white leading-tight uppercase">
+                            Discretion. Heritage. Advisory.
+                          </h2>
+                          <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-light">
+                            Founded on the principles of absolute client discretion and deep structural evaluation, Hrida Propnest represents the pinnacle of residential advisory in Mumbai. We represent South Mumbai's prestigious enclaves, private beachside villas in Alibaug, and luxury penthouses.
                           </p>
-                          <button
-                            onClick={() => setListingSuccess(false)}
-                            className="mt-6 rounded-full bg-stone-800 border border-stone-700 px-6 py-2.5 text-xs font-mono font-bold text-stone-300 hover:text-white"
-                          >
-                            List Another Property
-                          </button>
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="mb-6 border-b border-stone-800/80 pb-4">
-                            <span className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">Exclusive Owner Representation</span>
-                            <h2 className="font-display text-2xl font-black text-white mt-1">SELL OR RENT YOUR BOUTIQUE HOME</h2>
-                            <p className="text-xs text-stone-400 mt-1">Unlock direct access to India's most affluent high-net-worth buyers and tenants.</p>
+                          <div className="space-y-2.5 pt-2">
+                            <div className="flex items-start gap-2 text-xs text-stone-300">
+                              <span className="text-cyan-400 font-bold">✓</span>
+                              <span><strong>RERA Compliance Assured</strong>: We physically validate and verify titles for every catalog entry.</span>
+                            </div>
+                            <div className="flex items-start gap-2 text-xs text-stone-300">
+                              <span className="text-cyan-400 font-bold">✓</span>
+                              <span><strong>Private Placement Portfolio</strong>: Custom inventory curation for family offices and HNIs.</span>
+                            </div>
+                            <div className="flex items-start gap-2 text-xs text-stone-300">
+                              <span className="text-cyan-400 font-bold">✓</span>
+                              <span><strong>Bespoke Advisory Desk</strong>: Structural narrative evaluation and RERA registration services.</span>
+                            </div>
                           </div>
+                        </div>
 
-                          <form onSubmit={handleListPropertySubmit} className="space-y-4">
-                            
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                              <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Owner Name *</label>
-                                <input
-                                  type="text"
-                                  required
-                                  placeholder="E.g., Anirudh Sharma"
-                                  value={listName}
-                                  onChange={(e) => setListName(e.target.value)}
-                                  className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-600 focus:border-cyan-500 focus:outline-none"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Primary Email *</label>
-                                <input
-                                  type="email"
-                                  required
-                                  placeholder="anirudh@sharmacapital.in"
-                                  value={listEmail}
-                                  onChange={(e) => setListEmail(e.target.value)}
-                                  className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-600 focus:border-cyan-500 focus:outline-none"
-                                />
-                              </div>
+                        {/* Founder Card */}
+                        <div className="border border-stone-800/80 bg-stone-900/60 rounded-2xl p-6 relative overflow-hidden flex flex-col items-center text-center shadow-xl">
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-cyan-500/10 to-transparent blur-2xl rounded-full" />
+                          <div className="h-16 w-16 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4 shadow-lg">
+                            <User size={32} />
+                          </div>
+                          <h3 className="font-serif text-lg font-bold text-white uppercase">Chetan Pansare</h3>
+                          <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mt-0.5">Founder & Managing Advisor</span>
+                          <p className="text-[11px] italic text-stone-400 leading-relaxed mt-4">
+                            "Mumbai's real estate represents more than cement and steel; it holds architectural heritage and legacy. Our team is dedicated to providing physical title verification and representing luxury listings with absolute fidelity and privacy."
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Interactive Representation Inquiry Form */}
+                      <div className="bg-stone-900/40 border border-stone-800/80 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-2xl">
+                        {listingSuccess ? (
+                          <div className="text-center py-8">
+                            <div className="h-14 w-14 bg-cyan-500/10 text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                              <CheckCircle2 size={30} />
+                            </div>
+                            <h3 className="font-display text-xl font-bold text-white uppercase">Inquiry Securely Logged</h3>
+                            <p className="mt-2 text-xs text-stone-400 max-w-md mx-auto leading-relaxed">
+                              Namaste! Chetan Pansare's personal desk has received your proposal. A senior private listing representative will contact you shortly.
+                            </p>
+                            <button
+                              onClick={() => setListingSuccess(false)}
+                              className="mt-6 rounded-full bg-stone-800 border border-stone-700 px-6 py-2.5 text-xs font-mono font-bold text-stone-300 hover:text-white"
+                            >
+                              Submit Another Request
+                            </button>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="mb-6 border-b border-stone-800/80 pb-4">
+                              <span className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">Secure Representation Desk</span>
+                              <h3 className="font-serif text-xl font-bold text-white uppercase mt-1">LIST OR ACQUIRE AN ESTATE</h3>
+                              <p className="text-xs text-stone-400 mt-1">Submit your property parameters directly to our concierge team for VVIP representation.</p>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                              <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Contact Phone *</label>
-                                <input
-                                  type="tel"
-                                  required
-                                  placeholder="+91 98765 43210"
-                                  value={listPhone}
-                                  onChange={(e) => setListPhone(e.target.value)}
-                                  className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-600 focus:border-cyan-500 focus:outline-none font-mono"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Preferred Purpose</label>
-                                <select
-                                  value={listPropType}
-                                  onChange={(e) => setListPropType(e.target.value)}
-                                  className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white focus:border-cyan-500 focus:outline-none"
-                                >
-                                  <option value="Penthouse">Boutique Penthouse</option>
-                                  <option value="Heritage Bungalow">Heritage Mansion / Bungalow</option>
-                                  <option value="Coastal Villa">Beachside / Sea Facing Villa</option>
-                                  <option value="Golf Duplex">Exclusive Golf Course Facing Duplex</option>
-                                </select>
-                              </div>
-                            </div>
-
-                            <div className="border-t border-stone-800/80 pt-4 my-2">
-                              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-stone-500">Property Details</span>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                              <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Property Title / Name *</label>
-                                <input
-                                  type="text"
-                                  required
-                                  placeholder="E.g., The Sharma Vista Triplex"
-                                  value={listPropName}
-                                  onChange={(e) => setListPropName(e.target.value)}
-                                  className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-600 focus:border-cyan-500 focus:outline-none"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Metro Location</label>
-                                <select
-                                  value={listCity}
-                                  onChange={(e) => {
-                                    setListCity(e.target.value);
-                                    setListSubLocation("");
-                                    setIsLocationSuggestionsOpen(false);
-                                  }}
-                                  className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white focus:border-cyan-500 focus:outline-none"
-                                >
-                                  <option value="Mumbai">Mumbai</option>
-                                  <option value="Thane">Thane Region</option>
-                                  <option value="Navi Mumbai">Navi Mumbai</option>
-                                </select>
-                              </div>
-                            </div>
-
-                            {/* Detailed Sub-locality specification for Mumbai, Thane, Navi Mumbai */}
-                            {(listCity === "Mumbai" || listCity === "Thane" || listCity === "Navi Mumbai") && (
-                              <div className="relative rounded-xl border border-stone-800/80 bg-stone-950/40 p-4">
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">
-                                  Locality / Area in {listCity} *
-                                </label>
-                                <span className="text-[10px] text-stone-500 font-mono block mb-2 leading-relaxed">
-                                  Enter any local suburb, enclave, or luxury sector. Type any custom area to list.
-                                </span>
-                                
-                                <div className="relative z-10">
+                            <form onSubmit={handleListPropertySubmit} className="space-y-4">
+                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Your Name *</label>
                                   <input
                                     type="text"
                                     required
-                                    placeholder={
-                                      listCity === "Mumbai" 
-                                        ? "Search or type, e.g., Bandra West, Worli, Malabar Hill..." 
-                                        : listCity === "Thane" 
-                                          ? "Search or type, e.g., Hiranandani Estate, Ghodbunder Road..." 
-                                          : "Search or type, e.g., Palm Beach Road, Vashi, Kharghar..."
-                                    }
-                                    value={listSubLocation}
-                                    onChange={(e) => {
-                                      setListSubLocation(e.target.value);
-                                      setIsLocationSuggestionsOpen(true);
-                                    }}
-                                    onFocus={() => setIsLocationSuggestionsOpen(true)}
-                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-600 focus:border-cyan-500 focus:outline-none"
+                                    placeholder="E.g., Anirudh Sharma"
+                                    value={listName}
+                                    onChange={(e) => setListName(e.target.value)}
+                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none"
                                   />
-                                  
-                                  {listSubLocation && (
-                                    <button
-                                      type="button"
-                                      onClick={() => setListSubLocation("")}
-                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 hover:text-white text-[10px] font-mono px-1"
-                                    >
-                                      CLEAR
-                                    </button>
-                                  )}
                                 </div>
-
-                                {/* Floating Autocomplete Dropdown */}
-                                <AnimatePresence>
-                                  {isLocationSuggestionsOpen && (
-                                    <>
-                                      <div 
-                                        className="fixed inset-0 z-20" 
-                                        onClick={() => setIsLocationSuggestionsOpen(false)} 
-                                      />
-                                      <motion.div
-                                        initial={{ opacity: 0, y: 5 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 5 }}
-                                        className="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-xl border border-stone-800 bg-stone-950 p-1.5 shadow-2xl custom-scrollbar"
-                                      >
-                                        {(() => {
-                                          const searchPool = 
-                                            listCity === "Mumbai" 
-                                              ? MUMBAI_LOCATIONS 
-                                              : listCity === "Thane" 
-                                                ? THANE_LOCATIONS 
-                                                : NAVI_MUMBAI_LOCATIONS;
-                                          
-                                          const matches = searchPool.filter(loc => 
-                                            loc.toLowerCase().includes(listSubLocation.toLowerCase())
-                                          );
-
-                                          return (
-                                            <>
-                                              {matches.length > 0 ? (
-                                                matches.map((loc) => (
-                                                  <button
-                                                    key={loc}
-                                                    type="button"
-                                                    onClick={() => {
-                                                      setListSubLocation(loc);
-                                                      setIsLocationSuggestionsOpen(false);
-                                                    }}
-                                                    className="w-full rounded-lg text-left py-2 px-3 text-xs text-stone-300 hover:bg-stone-900 hover:text-cyan-400 transition-colors flex items-center justify-between"
-                                                  >
-                                                    <span>{loc}</span>
-                                                    <span className="text-[10px] font-mono text-stone-600 uppercase">Select</span>
-                                                  </button>
-                                                ))
-                                              ) : (
-                                                <div className="py-3 px-3 text-xs text-stone-500 font-mono text-center">
-                                                  "{(listSubLocation.length > 15 ? listSubLocation.substring(0, 15) + '...' : listSubLocation)}" will be listed as a custom {listCity} location.
-                                                </div>
-                                              )}
-                                            </>
-                                          );
-                                        })()}
-                                      </motion.div>
-                                    </>
-                                  )}
-                                </AnimatePresence>
-
-                                {/* Popular Quick Tags */}
-                                <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                                  <span className="text-[10px] font-mono uppercase text-stone-500 mr-1">Popular:</span>
-                                  {(listCity === "Mumbai" 
-                                    ? ["Altamount Road", "Malabar Hill", "Bandra West", "Worli", "Juhu", "Lower Parel"]
-                                    : listCity === "Thane" 
-                                      ? ["Hiranandani Estate", "Ghodbunder Road", "Majiwada", "Pokhran Road No. 2", "Naupada"]
-                                      : ["Palm Beach Road", "Vashi", "Kharghar", "Nerul", "Belapur"]
-                                  ).map((popLoc) => (
-                                    <button
-                                      key={popLoc}
-                                      type="button"
-                                      onClick={() => {
-                                        setListSubLocation(popLoc);
-                                        setIsLocationSuggestionsOpen(false);
-                                      }}
-                                      className={`rounded-full px-2.5 py-1 text-[10px] font-mono transition-all border ${
-                                        listSubLocation === popLoc
-                                          ? "bg-cyan-500/10 border-cyan-400 text-cyan-400"
-                                          : "bg-stone-900/60 border-stone-800 text-stone-400 hover:border-stone-600 hover:text-white"
-                                      }`}
-                                    >
-                                      {popLoc}
-                                    </button>
-                                  ))}
+                                <div>
+                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Primary Email *</label>
+                                  <input
+                                    type="email"
+                                    required
+                                    placeholder="anirudh@sharmacapital.in"
+                                    value={listEmail}
+                                    onChange={(e) => setListEmail(e.target.value)}
+                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none"
+                                  />
                                 </div>
                               </div>
-                            )}
 
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Contact Phone *</label>
+                                  <input
+                                    type="tel"
+                                    required
+                                    placeholder="+91 98765 43210"
+                                    value={listPhone}
+                                    onChange={(e) => setListPhone(e.target.value)}
+                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none font-mono"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Property Type / Interest</label>
+                                  <select
+                                    value={listPropType}
+                                    onChange={(e) => setListPropType(e.target.value)}
+                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white focus:border-cyan-500/50 focus:outline-none"
+                                  >
+                                    <option value="Acquisition Penthouse">Acquire a Sky Mansion / Penthouse</option>
+                                    <option value="Acquisition Beach Villa">Acquire a Beachside Villa</option>
+                                    <option value="Lease Premium Flat">Lease an Elite South Mumbai Flat</option>
+                                    <option value="Owner Listing Representative">Represent My Home for Sale/Rent</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Asset Location / Region *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="E.g., Worli Sea Face, Malabar Hill, Powai..."
+                                    value={listSubLocation}
+                                    onChange={(e) => setListSubLocation(e.target.value)}
+                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Target Budget / Valuation *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="E.g., ₹ 25 Crores or ₹ 4 Lakhs/mo"
+                                    value={listPrice}
+                                    onChange={(e) => setListPrice(e.target.value)}
+                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none font-mono"
+                                  />
+                                </div>
+                              </div>
+
                               <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Desired Value *</label>
-                                <input
-                                  type="text"
-                                  required
-                                  placeholder="E.g., ₹ 45 Crores or ₹ 6 Lakhs/mo"
-                                  value={listPrice}
-                                  onChange={(e) => setListPrice(e.target.value)}
-                                  className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-600 focus:border-cyan-500 focus:outline-none font-mono"
+                                <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Narrative Brief / Special Instructions</label>
+                                <textarea
+                                  rows={3}
+                                  placeholder="Specify any structural requests, off-market queries, or physical walkthrough dates..."
+                                  value={listDesc}
+                                  onChange={(e) => setListDesc(e.target.value)}
+                                  className="w-full rounded-xl border border-stone-800 bg-stone-950 p-3 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none resize-none"
                                 />
                               </div>
-                              <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Bedrooms (BHK)</label>
-                                <select
-                                  value={listBeds}
-                                  onChange={(e) => setListBeds(Number(e.target.value))}
-                                  className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white focus:border-cyan-500 focus:outline-none font-mono"
-                                >
-                                  <option value={2}>2 BHK</option>
-                                  <option value={3}>3 BHK</option>
-                                  <option value={4}>4 BHK</option>
-                                  <option value={5}>5+ BHK / Mansion</option>
-                                </select>
-                              </div>
-                              <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Total Sq Ft</label>
-                                <input
-                                  type="number"
-                                  placeholder="E.g., 4800"
-                                  value={listSqft}
-                                  onChange={(e) => setListSqft(e.target.value)}
-                                  className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-600 focus:border-cyan-500 focus:outline-none font-mono"
-                                />
-                              </div>
-                            </div>
 
-                            <div>
-                              <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Special Narrative / Interior Highlights</label>
-                              <textarea
-                                rows={3}
-                                placeholder="E.g., Snaidero cabinets, Private pool, imported French window glass panels, direct sea-breeze vectors..."
-                                value={listDesc}
-                                onChange={(e) => setListDesc(e.target.value)}
-                                className="w-full rounded-xl border border-stone-800 bg-stone-950 p-3 text-xs text-white placeholder-stone-600 focus:border-cyan-500 focus:outline-none resize-none"
-                              />
-                            </div>
+                              <motion.button
+                                whileHover={{ scale: 1.01 }}
+                                whileTap={{ scale: 0.99 }}
+                                disabled={listingSubmitting}
+                                type="submit"
+                                className="w-full rounded-xl bg-cyan-500 py-3 text-xs font-bold uppercase tracking-wider font-mono text-black shadow-lg cursor-pointer"
+                              >
+                                {listingSubmitting ? "Securing channel connection..." : "Connect to Concierge Advisory Desk"}
+                              </motion.button>
 
-                            <motion.button
-                              whileHover={{ scale: 1.01 }}
-                              whileTap={{ scale: 0.99 }}
-                              disabled={listingSubmitting}
-                              type="submit"
-                              className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 py-3 text-xs font-bold uppercase tracking-wider font-mono text-black shadow-lg cursor-pointer"
-                            >
-                              {listingSubmitting ? "Securing file submission..." : "Submit Proposal for VVIP Broker Review"}
-                            </motion.button>
-
-                          </form>
-                        </div>
-                      )}
+                            </form>
+                          </div>
+                        )}
+                      </div>
                     </motion.div>
                   )}
-                </>
-              )}
-
-            </motion.div>
-          ) : (
+                </motion.div>
+              ) : (
             
             /* ======================================================================= */
             /* SINGLE PROPERTY DETAILED IMMERSIVE SHOWCASE SLIDE                       */
@@ -1246,7 +1054,7 @@ const data = await res.json();
 
                       {/* Micro slide pagination trackers */}
                       <div className="flex gap-1.5 bg-stone-950/80 px-2.5 py-1.5 rounded-full border border-stone-800 backdrop-blur-sm">
-                        {PROPERTIES.filter(p => p.purpose === currentTab).map((p, idx) => (
+                        {filteredProperties.map((p, idx) => (
                           <button
                             key={p.id}
                             onClick={() => {
@@ -1514,3 +1322,4 @@ const data = await res.json();
     </div>
   );
 }
+

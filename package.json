@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "tsx watch server.ts",
+    "dev:full": "concurrently -n API,VITE -c cyan,yellow \"tsx watch server.ts\" \"vite\"",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit"
@@ -32,7 +34,10 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^10.0.3",
+    "express": "^5.2.1",
     "tailwindcss": "^4.1.14",
+    "tsx": "^4.23.1",
     "typescript": "~5.8.2"
   }
 }

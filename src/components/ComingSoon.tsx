@@ -10,6 +10,90 @@ import {
   Building
 } from "lucide-react";
 
+export function HpLogo({ className = "w-16 h-16", glow = true }: { className?: string; glow?: boolean }) {
+  return (
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <defs>
+        <linearGradient id="gold-gradient-logo" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fdf6e2" />
+          <stop offset="40%" stopColor="#d4af37" />
+          <stop offset="70%" stopColor="#aa814c" />
+          <stop offset="100%" stopColor="#fcf2d9" />
+        </linearGradient>
+        {glow && (
+          <filter id="gold-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        )}
+      </defs>
+      
+      {/* Left leg of H */}
+      <path 
+        d="M 32 18 L 32 80" 
+        stroke="url(#gold-gradient-logo)" 
+        strokeWidth="6" 
+        strokeLinecap="round" 
+        filter={glow ? "url(#gold-glow)" : undefined}
+      />
+      {/* Right leg of H / Stem of P */}
+      <path 
+        d="M 60 18 L 60 80" 
+        stroke="url(#gold-gradient-logo)" 
+        strokeWidth="6" 
+        strokeLinecap="round"
+        filter={glow ? "url(#gold-glow)" : undefined}
+      />
+      {/* Roof forming the H crossbar */}
+      <path 
+        d="M 32 50 L 46 35 L 60 50" 
+        stroke="url(#gold-gradient-logo)" 
+        strokeWidth="6" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        filter={glow ? "url(#gold-glow)" : undefined}
+      />
+      {/* Loop of P */}
+      <path 
+        d="M 60 18 H 76 C 86 18 86 45 76 45 H 60" 
+        stroke="url(#gold-gradient-logo)" 
+        strokeWidth="6" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        filter={glow ? "url(#gold-glow)" : undefined}
+      />
+      {/* House window with 4 panes */}
+      <rect 
+        x="40" 
+        y="56" 
+        width="12" 
+        height="12" 
+        stroke="url(#gold-gradient-logo)" 
+        strokeWidth="2" 
+        filter={glow ? "url(#gold-glow)" : undefined}
+      />
+      <line 
+        x1="46" 
+        y1="56" 
+        x2="46" 
+        y2="68" 
+        stroke="url(#gold-gradient-logo)" 
+        strokeWidth="2" 
+        filter={glow ? "url(#gold-glow)" : undefined}
+      />
+      <line 
+        x1="40" 
+        y1="62" 
+        x2="52" 
+        y2="62" 
+        stroke="url(#gold-gradient-logo)" 
+        strokeWidth="2" 
+        filter={glow ? "url(#gold-glow)" : undefined}
+      />
+    </svg>
+  );
+}
+
 interface ComingSoonProps {
   onUnlock: () => void;
 }
@@ -62,7 +146,7 @@ export function ComingSoon({ onUnlock }: ComingSoonProps) {
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {/* Left Spotlight */}
         <motion.div 
-          className="absolute bottom-0 left-[15%] w-[450px] h-[120vh] origin-bottom blur-3xl opacity-20 bg-gradient-to-t from-red-600/30 via-amber-500/20 to-cyan-400/5"
+          className="absolute bottom-0 left-[15%] w-[450px] h-[120vh] origin-bottom blur-3xl opacity-20 bg-gradient-to-t from-cyan-800/20 via-cyan-600/10 to-transparent"
           animate={{
             rotate: [-20, 15, -20],
             scaleX: [1, 1.25, 1],
@@ -76,7 +160,7 @@ export function ComingSoon({ onUnlock }: ComingSoonProps) {
 
         {/* Right Spotlight */}
         <motion.div 
-          className="absolute bottom-0 right-[15%] w-[450px] h-[120vh] origin-bottom blur-3xl opacity-25 bg-gradient-to-t from-red-600/30 via-amber-500/25 to-amber-300/5"
+          className="absolute bottom-0 right-[15%] w-[450px] h-[120vh] origin-bottom blur-3xl opacity-25 bg-gradient-to-t from-teal-800/20 via-cyan-700/10 to-transparent"
           animate={{
             rotate: [15, -20, 15],
             scaleX: [1.2, 0.9, 1.2],
@@ -89,7 +173,7 @@ export function ComingSoon({ onUnlock }: ComingSoonProps) {
         />
 
         {/* Center Golden Aura Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[50vh] bg-amber-500/5 blur-[150px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[50vh] bg-cyan-500/5 blur-[150px] rounded-full pointer-events-none" />
       </div>
 
       {/* Floating Golden Dust Particles */}
@@ -97,7 +181,7 @@ export function ComingSoon({ onUnlock }: ComingSoonProps) {
         {[...Array(25)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-gradient-to-r from-amber-400 to-amber-200 rounded-full"
+            className="absolute w-1 h-1 bg-gradient-to-r from-cyan-400 to-cyan-200 rounded-full"
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
@@ -119,86 +203,93 @@ export function ComingSoon({ onUnlock }: ComingSoonProps) {
 
       {/* Top Header Bar */}
       <header className="relative z-10 max-w-7xl w-full mx-auto px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="font-display font-black text-2xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-amber-400 to-amber-200 italic">
-            HRIDA
-          </span>
-          <div className="rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 text-[9px] font-mono font-bold tracking-widest text-red-400 uppercase">
-            PROPNEST
+        <div className="flex items-center gap-2.5 cursor-pointer select-none">
+          <HpLogo className="w-9 h-9" glow={false} />
+          <div className="flex flex-col">
+            <span className="font-serif font-bold text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-cyan-100 via-cyan-400 to-cyan-600 uppercase leading-none">
+              HRIDA
+            </span>
+            <span className="text-[7px] font-sans font-black tracking-[0.3em] text-cyan-400 uppercase leading-none mt-1">
+              — PROPNEST —
+            </span>
+            <span className="text-[5px] font-sans font-bold tracking-[0.4em] text-cyan-400/80 uppercase leading-none mt-1 pl-0.5">
+              FIND | INVEST | GROW
+            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <motion.button
-            whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(245, 158, 11, 0.25)" }}
+            whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(212, 175, 55, 0.25)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowPasscodeModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-stone-900/90 border border-amber-500/30 text-[11px] font-mono font-semibold text-amber-400 tracking-wider hover:bg-stone-900 transition-all cursor-pointer shadow-lg"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-stone-900/90 border border-cyan-500/30 text-[11px] font-mono font-semibold text-cyan-400 tracking-wider hover:bg-stone-900 transition-all cursor-pointer shadow-lg"
           >
-            <Crown size={12} className="text-amber-400 animate-pulse" />
+            <Crown size={12} className="text-cyan-400 animate-pulse" />
             <span>VIP ENTRANCE</span>
           </motion.button>
         </div>
       </header>
 
       {/* Main Centered Content Area */}
-      <main className="relative z-10 max-w-4xl w-full mx-auto px-6 flex flex-col items-center justify-center text-center py-12 my-auto space-y-12">
+      <main className="relative z-10 max-w-4xl w-full mx-auto px-6 flex flex-col items-center justify-center text-center py-12 my-auto space-y-10">
         
-        {/* Animated Golden Crown Emblem & Rings */}
-        <div className="relative flex items-center justify-center h-28 w-28">
-          {/* Outer Pulsing Glow Ring */}
-          <motion.div 
-            className="absolute inset-0 rounded-full border border-amber-500/20"
-            animate={{ scale: [1, 1.25, 1], opacity: [0.6, 0.1, 0.6] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-          {/* Middle Rotating Dashed Ring */}
-          <motion.div 
-            className="absolute inset-2 rounded-full border border-dashed border-amber-500/40"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          />
-          {/* Inner Glow Base */}
-          <div className="absolute inset-4 rounded-full bg-stone-950 border border-amber-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.15)]">
-            <Crown size={28} className="text-amber-400 drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)]" />
+        {/* Animated Golden HP Monogram Emblem & Rings */}
+        <div className="flex flex-col items-center select-none">
+          <div className="relative flex items-center justify-center h-28 w-28 mb-6">
+            {/* Outer Pulsing Glow Ring */}
+            <motion.div 
+              className="absolute inset-0 rounded-full border border-cyan-500/20"
+              animate={{ scale: [1, 1.25, 1], opacity: [0.6, 0.1, 0.6] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
+            {/* Middle Rotating Dashed Ring */}
+            <motion.div 
+              className="absolute inset-2 rounded-full border border-dashed border-cyan-500/40"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            />
+            {/* Inner Glow Base with HP Monogram */}
+            <div className="absolute inset-4 rounded-full bg-stone-950 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(204,168,95,0.15)]">
+              <HpLogo className="w-14 h-14 drop-shadow-[0_2px_10px_rgba(204,168,95,0.4)]" glow={true} />
+            </div>
+          </div>
+
+          {/* Full Logo Typography replicating the image */}
+          <div className="flex flex-col items-center mb-6">
+            <h1 className="font-serif font-black text-5xl sm:text-6xl tracking-[0.1em] text-transparent bg-clip-text bg-gradient-to-b from-cyan-100 via-cyan-400 to-cyan-600 uppercase leading-none pl-[0.1em]">
+              HRIDA
+            </h1>
+            <div className="flex items-center gap-3 mt-2">
+              <span className="h-[1px] w-8 bg-gradient-to-r from-transparent to-cyan-500/60" />
+              <span className="text-[11px] font-sans font-black tracking-[0.3em] text-cyan-400 uppercase leading-none">
+                PROPNEST
+              </span>
+              <span className="h-[1px] w-8 bg-gradient-to-l from-transparent to-cyan-500/60" />
+            </div>
+            <p className="text-[8px] sm:text-[9px] font-sans font-bold tracking-[0.55em] text-cyan-400/80 uppercase leading-none mt-3.5 pl-[0.55em]">
+              FIND | INVEST | GROW
+            </p>
           </div>
         </div>
 
-        {/* Luxury Coming Soon Letters Animation */}
+        {/* Coming Soon Text */}
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 bg-red-950/40 border border-red-800/40 rounded-full px-4 py-1">
-            <Sparkles size={12} className="text-amber-400 animate-spin-slow" />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-red-400 font-bold">The Grand Curtains Await</span>
+          <div className="inline-flex items-center gap-2 bg-cyan-950/40 border border-cyan-800/40 rounded-full px-4 py-1">
+            <Sparkles size={12} className="text-cyan-400 animate-spin-slow" />
+            <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-cyan-400 font-bold">The Grand Curtains Await</span>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight leading-none text-white uppercase flex flex-wrap justify-center gap-x-4">
-            {comingSoonText.split(" ").map((word, wordIdx) => (
-              <span key={wordIdx} className="inline-flex">
-                {word.split("").map((letter, charIdx) => (
-                  <motion.span
-                    key={charIdx}
-                    initial={{ opacity: 0, y: 25, filter: "blur(5px)" }}
-                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                    transition={{
-                      duration: 0.8,
-                      delay: (wordIdx * 4 + charIdx) * 0.08,
-                      ease: [0.25, 1, 0.5, 1]
-                    }}
-                    className="inline-block text-transparent bg-clip-text bg-gradient-to-b from-white via-stone-100 to-stone-400 hover:text-amber-400 transition-colors duration-300"
-                  >
-                    {letter}
-                  </motion.span>
-                ))}
-              </span>
-            ))}
-          </h1>
+          <h2 className="text-2xl sm:text-3xl font-display font-semibold tracking-[0.35em] text-transparent bg-clip-text bg-gradient-to-b from-white to-stone-400 uppercase leading-none pl-[0.35em]">
+            COMING SOON
+          </h2>
 
-          <p className="text-lg font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-rose-300 to-amber-300 max-w-xl mx-auto uppercase">
-            Mumbai's Ultra-Luxury Real Estate Portal — Grand Premiere Coming Soon
+          <p className="text-xs tracking-wider text-cyan-300/70 max-w-md mx-auto uppercase font-mono">
+            Mumbai's Ultra-Luxury Real Estate Portal
           </p>
         </div>
 
-        {/* Centered Red Carpet Entrance Visualizer (Grown & Polished) */}
+        {/* Centered Golden Carpet Entrance Visualizer */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -209,34 +300,34 @@ export function ComingSoon({ onUnlock }: ComingSoonProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-transparent to-transparent pointer-events-none z-10" />
 
           <div className="absolute top-2.5 left-1/2 -translate-x-1/2 text-[9px] uppercase font-mono tracking-widest text-stone-500 font-bold flex items-center gap-1.5">
-            <Building size={10} className="text-amber-500" />
+            <Building size={10} className="text-cyan-500" />
             <span>Virtual VIP Entrance Walkway</span>
           </div>
 
           {/* Glowing grand double doors representation at the top */}
           <div className="absolute top-8 left-1/2 -translate-x-1/2 flex gap-1.5 items-end z-10">
             <motion.div 
-              className="w-12 h-16 bg-stone-900 border-t border-x border-amber-500/50 rounded-t shadow-[0_-5px_15px_rgba(245,158,11,0.2)] flex items-center justify-center cursor-pointer"
-              whileHover={{ borderColor: "#f59e0b", boxShadow: "0_-5px_25px_rgba(245,158,11,0.4)" }}
+              className="w-12 h-16 bg-stone-900 border-t border-x border-cyan-500/50 rounded-t shadow-[0_-5px_15px_rgba(204,168,95,0.2)] flex items-center justify-center cursor-pointer"
+              whileHover={{ borderColor: "#cca85f", boxShadow: "0_-5px_25px_rgba(204,168,95,0.4)" }}
             >
-              <Crown size={12} className="text-amber-500/40" />
+              <Crown size={12} className="text-cyan-500/40" />
             </motion.div>
             <motion.div 
-              className="w-12 h-16 bg-stone-900 border-t border-x border-amber-500/50 rounded-t shadow-[0_-5px_15px_rgba(245,158,11,0.2)] flex items-center justify-center cursor-pointer"
-              whileHover={{ borderColor: "#f59e0b", boxShadow: "0_-5px_25px_rgba(245,158,11,0.4)" }}
+              className="w-12 h-16 bg-stone-900 border-t border-x border-cyan-500/50 rounded-t shadow-[0_-5px_15px_rgba(204,168,95,0.2)] flex items-center justify-center cursor-pointer"
+              whileHover={{ borderColor: "#cca85f", boxShadow: "0_-5px_25px_rgba(204,168,95,0.4)" }}
             >
-              <Crown size={12} className="text-amber-500/40" />
+              <Crown size={12} className="text-cyan-500/40" />
             </motion.div>
           </div>
 
           {/* Glowing Spotlight guides pointing at the doors */}
-          <div className="absolute top-10 left-[41%] w-1.5 h-16 bg-gradient-to-b from-amber-400/80 to-transparent blur-[1px] rotate-12 origin-top animate-pulse" />
-          <div className="absolute top-10 right-[41%] w-1.5 h-16 bg-gradient-to-b from-amber-400/80 to-transparent blur-[1px] -rotate-12 origin-top animate-pulse" />
+          <div className="absolute top-10 left-[41%] w-1.5 h-16 bg-gradient-to-b from-cyan-400/80 to-transparent blur-[1px] rotate-12 origin-top animate-pulse" />
+          <div className="absolute top-10 right-[41%] w-1.5 h-16 bg-gradient-to-b from-cyan-400/80 to-transparent blur-[1px] -rotate-12 origin-top animate-pulse" />
 
-          {/* 3D Perspective Red Carpet Runner */}
+          {/* 3D Perspective Golden Carpet Runner */}
           <div className="relative w-full h-24 flex justify-center z-10">
             <motion.div 
-              className="w-24 h-full bg-gradient-to-t from-red-600 via-red-700 to-rose-900 shadow-[0_0_25px_rgba(220,38,38,0.5)]"
+              className="w-24 h-full bg-gradient-to-t from-cyan-600 via-cyan-700 to-cyan-900 shadow-[0_0_25px_rgba(204,168,95,0.5)]"
               style={{
                 clipPath: "polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%)",
                 transform: "perspective(120px) rotateX(8deg)",
@@ -244,9 +335,9 @@ export function ComingSoon({ onUnlock }: ComingSoonProps) {
               }}
               animate={{
                 boxShadow: [
-                  "0_0_25px_rgba(220,38,38,0.4)",
-                  "0_0_35px_rgba(220,38,38,0.6)",
-                  "0_0_25px_rgba(220,38,38,0.4)"
+                  "0_0_25px_rgba(204,168,95,0.4)",
+                  "0_0_35px_rgba(204,168,95,0.6)",
+                  "0_0_25px_rgba(204,168,95,0.4)"
                 ]
               }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -254,26 +345,26 @@ export function ComingSoon({ onUnlock }: ComingSoonProps) {
             
             {/* Left Stanchions (Gold Poles with glowing lights) */}
             <div className="absolute left-[26%] top-6 bottom-0 flex flex-col justify-between items-center py-2">
-              <div className="w-1 h-4 bg-amber-400 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
-              <div className="w-1 h-6 bg-amber-400 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
-              <div className="w-1 h-9 bg-amber-400 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+              <div className="w-1 h-4 bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(204,168,95,0.8)]" />
+              <div className="w-1 h-6 bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(204,168,95,0.8)]" />
+              <div className="w-1 h-9 bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(204,168,95,0.8)]" />
             </div>
 
             {/* Right Stanchions */}
             <div className="absolute right-[26%] top-6 bottom-0 flex flex-col justify-between items-center py-2">
-              <div className="w-1 h-4 bg-amber-400 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
-              <div className="w-1 h-6 bg-amber-400 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
-              <div className="w-1 h-9 bg-amber-400 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+              <div className="w-1 h-4 bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(204,168,95,0.8)]" />
+              <div className="w-1 h-6 bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(204,168,95,0.8)]" />
+              <div className="w-1 h-9 bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(204,168,95,0.8)]" />
             </div>
 
-            {/* Velvet ropes connecting stanchions */}
+            {/* Golden ropes connecting stanchions */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-20 opacity-80">
               {/* Left ropes */}
-              <path d="M 160 18 Q 170 24 172 42" stroke="#dc2626" strokeWidth="1.5" fill="none" />
-              <path d="M 172 42 Q 182 56 184 85" stroke="#dc2626" strokeWidth="2.5" fill="none" />
+              <path d="M 160 18 Q 170 24 172 42" stroke="#b38e46" strokeWidth="1.5" fill="none" />
+              <path d="M 172 42 Q 182 56 184 85" stroke="#b38e46" strokeWidth="2.5" fill="none" />
               {/* Right ropes */}
-              <path d="M 322 18 Q 312 24 310 42" stroke="#dc2626" strokeWidth="1.5" fill="none" />
-              <path d="M 310 42 Q 300 56 298 85" stroke="#dc2626" strokeWidth="2.5" fill="none" />
+              <path d="M 322 18 Q 312 24 310 42" stroke="#b38e46" strokeWidth="1.5" fill="none" />
+              <path d="M 310 42 Q 300 56 298 85" stroke="#b38e46" strokeWidth="2.5" fill="none" />
             </svg>
           </div>
         </motion.div>
