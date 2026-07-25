@@ -18,7 +18,7 @@ import {
   Info,
   CheckCircle2
 } from "lucide-react";
-import { collection, getDocs, setDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, setDoc, deleteDoc, doc, writeBatch } from "firebase/firestore";
 import { db } from "../firebase";
 import { Lead, Property } from "../types";
 import { DEFAULT_PROPERTIES } from "../propertiesData";
@@ -347,20 +347,22 @@ setShowAreaDropdown(false);
     }
   };
 
-  // Seed Default Properties Handler
-  const handleSeedDefaults = async () => {
-    const confirmSeed = window.confirm("Load the 6 original bespoke Indian showcase properties into the broker portfolio?");
+  // Sync Local Properties to Cloud Handler
+  const handleSyncToCloud = async () => {
+    const confirmSeed = window.confirm("Sync all properties currently on this computer to the live cloud database?");
     if (!confirmSeed) return;
 
-    onPropertiesUpdate(DEFAULT_PROPERTIES);
-
-    // Call server to sync
     try {
-      // With Firebase, you don't typically sync a whole array like this easily without batching,
-      // but for this demo we'll assume the local update is enough.
-      toast.success("Sample properties loaded locally.");
+      const batch = writeBatch(db);
+      properties.forEach(prop => {
+        const docRef = doc(db, "properties", prop.id);
+        batch.set(docRef, prop);
+      });
+      await batch.commit();
+      toast.success("Properties successfully synchronized to the live cloud database.");
     } catch (e) {
-      console.warn("Load failed.");
+      console.warn("Firebase Sync failed.", e);
+      toast.error("Cloud synchronization failed. Are security rules updated?");
     }
   };
 
@@ -405,6 +407,15 @@ setShowAreaDropdown(false);
                     title="Refresh leads"
                   >
                     <RefreshCw size={18} className={loading ? "animate-spin text-cyan-400" : ""} />
+                  </button>
+                )}
+                {activeMainTab === "properties" && (
+                  <button
+                    onClick={handleSyncToCloud}
+                    className="flex items-center gap-1.5 rounded-lg border border-stone-700 bg-stone-800 px-3 py-1.5 text-xs font-semibold text-stone-300 transition-colors hover:bg-stone-700 hover:text-white"
+                  >
+                    <RefreshCw size={14} />
+                    <span>Sync Local to Cloud</span>
                   </button>
                 )}
                 <button
