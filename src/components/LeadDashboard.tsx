@@ -296,10 +296,18 @@ if (file.size > 5 * 1024 * 1024) {
 setSavingProperty(true);
     // Call server to add it as well
     try {
-      await setDoc(doc(db, "properties", newPropertyObj.id), newPropertyObj);
-      toast.success("Property added successfully");
+      const res = await fetch("http://localhost:3001/api/properties", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-broker-pin": "4040" },
+        body: JSON.stringify(newPropertyObj),
+      });
+      if (res.ok) {
+        toast.success("Property added successfully");
+      } else {
+        toast.error("Failed to add property to server.");
+      }
     } catch (err) {
-      console.warn("Firebase connection failed, property saved to local browser cache.");
+      console.warn("API connection failed, property saved to local browser cache.");
     }
 finally {
   setSavingProperty(false);
@@ -339,11 +347,14 @@ setShowAreaDropdown(false);
 
     // Call server to delete
     try {
-      await deleteDoc(doc(db, "properties", id));
-      toast.success("Brochure removed successfully");
-    } catch (error) {
-      console.error("Delete failed:", error);
-      toast.error("Failed to remove brochure");
+      const res = await fetch(`http://localhost:3001/api/properties/${id}`, {
+        method: "DELETE",
+        headers: { "x-broker-pin": "4040" },
+      });
+      if (!res.ok) throw new Error("API delete failed");
+      toast.success("Brochure deleted successfully");
+    } catch (err) {
+      console.warn("API connection failed, property deleted locally.");
     }
   };
 
@@ -353,16 +364,16 @@ setShowAreaDropdown(false);
     if (!confirmSeed) return;
 
     try {
-      const batch = writeBatch(db);
-      properties.forEach(prop => {
-        const docRef = doc(db, "properties", prop.id);
-        batch.set(docRef, prop);
+      const res = await fetch("http://localhost:3001/api/properties/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-broker-pin": "4040" },
+        body: JSON.stringify({ properties }),
       });
-      await batch.commit();
-      toast.success("Properties successfully synchronized to the live cloud database.");
+      if (!res.ok) throw new Error("API sync failed");
+      toast.success("Properties successfully synced to local backend.");
     } catch (e) {
-      console.warn("Firebase Sync failed.", e);
-      toast.error("Cloud synchronization failed. Are security rules updated?");
+      console.warn("Local API Sync failed.", e);
+      toast.error("API synchronization failed. Is dev server running?");
     }
   };
 
@@ -371,16 +382,16 @@ setShowAreaDropdown(false);
     if (!confirmSeed) return;
 
     try {
-      const batch = writeBatch(db);
-      DEFAULT_PROPERTIES.forEach(prop => {
-        const docRef = doc(db, "properties", prop.id);
-        batch.set(docRef, prop);
+      const res = await fetch("http://localhost:3001/api/properties/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-broker-pin": "4040" },
+        body: JSON.stringify({ properties: DEFAULT_PROPERTIES }),
       });
-      await batch.commit();
-      toast.success("Sample properties successfully seeded to the live cloud database.");
+      if (!res.ok) throw new Error("API sync failed");
+      toast.success("Sample properties successfully seeded to the local backend.");
     } catch (e) {
-      console.warn("Firebase Seed failed.", e);
-      toast.error("Cloud synchronization failed. Are security rules updated?");
+      console.warn("Local API Seed failed.", e);
+      toast.error("API synchronization failed. Is dev server running?");
     }
   };
 
