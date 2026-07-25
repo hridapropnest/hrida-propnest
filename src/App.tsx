@@ -122,27 +122,29 @@ export default function App() {
     }
     return DEFAULT_PROPERTIES;
   });
-  // Fetch properties from local API server
+  // Fetch properties from Firebase in real-time
   useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        const res = await fetch("http://localhost:3001/api/properties");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.properties) {
-            setProperties(data.properties);
-            localStorage.setItem("hrida_properties", JSON.stringify(data.properties));
+    import("firebase/firestore").then(({ onSnapshot, collection }) => {
+      import("./firebase").then(({ db }) => {
+        const unsubscribe = onSnapshot(
+          collection(db, "properties"),
+          (snapshot) => {
+            const fbProps: Property[] = [];
+            snapshot.forEach((doc) => {
+              fbProps.push({ id: doc.id, ...doc.data() } as Property);
+            });
+
+            // Firebase is the single source of truth.
+            setProperties(fbProps);
+            localStorage.setItem("hrida_properties", JSON.stringify(fbProps));
+          },
+          (err) => {
+            console.error("Failed to fetch properties from Firebase in real-time:", err);
           }
-        }
-      } catch (err) {
-        console.error("Failed to fetch properties from local API:", err);
-      }
-    };
-    
-    fetchProperties();
-    // Also set up polling for "real-time" feel since we removed Firebase snapshot
-    const interval = setInterval(fetchProperties, 5000);
-    return () => clearInterval(interval);
+        );
+        return () => unsubscribe();
+      });
+    });
   }, []);
   // Save properties to local storage and sync to server when updated locally
   const updatePropertiesList = async (newProps: Property[]) => {

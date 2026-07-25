@@ -215,15 +215,37 @@ export function LeadDashboard({
       return;
     }
 
-if (file.size > 5 * 1024 * 1024) {
-  toast.success("Maximum image size is 5MB.");
-  return;
-}
+    if (file.size > 5 * 1024 * 1024) {
+      toast.success("Maximum image size is 5MB.");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
-        setPropImage(e.target.result as string);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 800;
+          const scale = MAX_WIDTH / img.width;
+          
+          if (img.width > MAX_WIDTH) {
+            canvas.width = MAX_WIDTH;
+            canvas.height = img.height * scale;
+          } else {
+            canvas.width = img.width;
+            canvas.height = img.height;
+          }
+          
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            // Compress to JPEG with 0.7 quality
+            const compressed = canvas.toDataURL("image/jpeg", 0.7);
+            setPropImage(compressed);
+          }
+        };
+        img.src = e.target.result as string;
       }
     };
     reader.readAsDataURL(file);
