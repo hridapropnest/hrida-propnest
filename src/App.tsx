@@ -134,12 +134,10 @@ export default function App() {
             fbProps.push({ id: doc.id, ...doc.data() } as Property);
           });
 
-          if (fbProps.length > 0) {
-            setProperties(fbProps);
-            localStorage.setItem("hrida_properties", JSON.stringify(fbProps));
-          } else {
-            setProperties(DEFAULT_PROPERTIES);
-          }
+          // Firebase is the single source of truth. 
+          // If the database is empty, the portfolio should be empty.
+          setProperties(fbProps);
+          localStorage.setItem("hrida_properties", JSON.stringify(fbProps));
         },
         (err) => {
           console.error("Failed to fetch properties from Firebase in real-time:", err);

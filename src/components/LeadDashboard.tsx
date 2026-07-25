@@ -354,7 +354,8 @@ setShowAreaDropdown(false);
 
     try {
       const batch = writeBatch(db);
-      properties.forEach(prop => {
+      const propsToSeed = properties.length > 0 ? properties : DEFAULT_PROPERTIES;
+      propsToSeed.forEach(prop => {
         const docRef = doc(db, "properties", prop.id);
         batch.set(docRef, prop);
       });
