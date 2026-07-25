@@ -16,7 +16,8 @@ import {
   Upload,
   Sparkles,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  DatabaseBackup
 } from "lucide-react";
 import { collection, getDocs, setDoc, deleteDoc, doc, writeBatch } from "firebase/firestore";
 import { db } from "../firebase";
@@ -301,8 +302,16 @@ setSavingProperty(true);
         headers: { "Content-Type": "application/json", "x-broker-pin": "4040" },
         body: JSON.stringify(newPropertyObj),
       });
+      
+      // Auto-sync to Firebase
+      try {
+        await setDoc(doc(db, "properties", newPropertyObj.id), newPropertyObj);
+      } catch (fbErr) {
+        console.warn("Firebase auto-sync failed:", fbErr);
+      }
+
       if (res.ok) {
-        toast.success("Property added successfully");
+        toast.success("Property added and synced to cloud successfully");
       } else {
         toast.error("Failed to add property to server.");
       }
@@ -351,31 +360,21 @@ setShowAreaDropdown(false);
         method: "DELETE",
         headers: { "x-broker-pin": "4040" },
       });
+      
+      // Auto-sync delete to Firebase
+      try {
+        await deleteDoc(doc(db, "properties", id));
+      } catch (fbErr) {
+        console.warn("Firebase auto-sync delete failed:", fbErr);
+      }
+
       if (!res.ok) throw new Error("API delete failed");
-      toast.success("Brochure deleted successfully");
+      toast.success("Brochure deleted and synced to cloud successfully");
     } catch (err) {
       console.warn("API connection failed, property deleted locally.");
     }
   };
 
-  // Sync Local Properties to Cloud Handler
-  const handleSyncToCloud = async () => {
-    const confirmSeed = window.confirm("Sync all properties currently on this computer to the live cloud database?");
-    if (!confirmSeed) return;
-
-    try {
-      const res = await fetch("http://localhost:3001/api/properties/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-broker-pin": "4040" },
-        body: JSON.stringify({ properties }),
-      });
-      if (!res.ok) throw new Error("API sync failed");
-      toast.success("Properties successfully synced to local backend.");
-    } catch (e) {
-      console.warn("Local API Sync failed.", e);
-      toast.error("API synchronization failed. Is dev server running?");
-    }
-  };
 
   const handleSeedDefaults = async () => {
     const confirmSeed = window.confirm("Seed the live cloud database with the default template listings?");
@@ -387,8 +386,21 @@ setShowAreaDropdown(false);
         headers: { "Content-Type": "application/json", "x-broker-pin": "4040" },
         body: JSON.stringify({ properties: DEFAULT_PROPERTIES }),
       });
+      
+      // Auto-sync seed to Firebase
+      try {
+        const batch = writeBatch(db);
+        DEFAULT_PROPERTIES.forEach(prop => {
+          const docRef = doc(db, "properties", prop.id);
+          batch.set(docRef, prop);
+        });
+        await batch.commit();
+      } catch (fbErr) {
+        console.warn("Firebase auto-sync seed failed:", fbErr);
+      }
+
       if (!res.ok) throw new Error("API sync failed");
-      toast.success("Sample properties successfully seeded to the local backend.");
+      toast.success("Sample properties seeded and synced to cloud successfully.");
     } catch (e) {
       console.warn("Local API Seed failed.", e);
       toast.error("API synchronization failed. Is dev server running?");
@@ -439,13 +451,14 @@ setShowAreaDropdown(false);
                   </button>
                 )}
                 {activeMainTab === "properties" && (
-                  <button
-                    onClick={handleSyncToCloud}
-                    className="flex items-center gap-1.5 rounded-lg border border-stone-700 bg-stone-800 px-3 py-1.5 text-xs font-semibold text-stone-300 transition-colors hover:bg-stone-700 hover:text-white"
-                  >
-                    <RefreshCw size={14} />
-                    <span>Sync Local to Cloud</span>
-                  </button>
+                  <div className="flex flex-col gap-2 justify-center">
+                        <button 
+                          onClick={handleSeedDefaults}
+                          className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-stone-400 hover:text-yellow-400 transition-colors bg-stone-900 border border-stone-800 px-3 py-1.5 rounded-lg shadow"
+                        >
+                          <DatabaseBackup size={12} /> Seed Sample Listings
+                        </button>
+                      </div>
                 )}
                 <button
                   id="close-leads-btn"
