@@ -407,12 +407,6 @@ export default function App() {
               >
                 About Us
               </button>
-              <button 
-                onClick={() => { setIsDashboardOpen(true); setIsMobileMenuOpen(false); }}
-                className="text-left py-2 text-xs text-emerald-400 font-mono font-bold"
-              >
-                Open Broker Lead Desk ({leadsCount})
-              </button>
             </div>
           </motion.div>
         )}
