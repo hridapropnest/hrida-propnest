@@ -29,6 +29,9 @@ import { PROPERTIES, DEFAULT_PROPERTIES } from "./propertiesData";
 import { Property } from "./types";
 import { BookingModal, CallModal } from "./components/Modals";
 import { AIChat } from "./components/AIChat";
+import ContactPage from "./components/ContactPage";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "./firebase";
 import { LeadDashboard } from "./components/LeadDashboard";
 import { ThreeBackground } from "./components/ThreeBackground";
 import { BrokerAccessModal } from "./components/BrokerAccessModal";
@@ -124,22 +127,19 @@ export default function App() {
   useEffect(() => {
     const fetchProps = async () => {
       try {
-        const res = await fetch("/api/properties");
+        const querySnapshot = await getDocs(collection(db, "properties"));
+        const fbProps: Property[] = [];
+        querySnapshot.forEach((doc) => {
+          fbProps.push({ id: doc.id, ...doc.data() } as Property);
+        });
 
-        if (!res.ok) {
-            throw new Error("Unable to fetch properties.");
-        }
-
-        const data = await res.json();
-        if (data.success) {
-          if (Array.isArray(data.properties) && data.properties.length > 0) {
-            setProperties(data.properties);
-            localStorage.setItem("hrida_properties", JSON.stringify(data.properties));
-            return;
-          }
+        if (fbProps.length > 0) {
+          setProperties(fbProps);
+          localStorage.setItem("hrida_properties", JSON.stringify(fbProps));
+          return;
         }
       } catch (err) {
-        console.error("Failed to fetch properties from server, using local data source fallback:", err);
+        console.error("Failed to fetch properties from Firebase, using local data source fallback:", err);
         setProperties(prev => prev.length === 0 ? DEFAULT_PROPERTIES : prev);
       }
     };
@@ -153,23 +153,10 @@ export default function App() {
     
     // Sync to server in background
     try {
-  const response = await fetch("/api/properties/sync", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-broker-pin": BROKER_PIN,
-    },
-    body: JSON.stringify({
-      properties: newProps,
-    }),
-  });
-
-  if (!response.ok) {
-    console.warn("Property sync failed.");
-  }
-} catch (e) {
-  console.warn("Could not sync updated properties with server:", e);
-}
+      // With Firebase, individual adds/deletes are preferred over bulk array sync
+    } catch (e) {
+      console.warn("Could not sync array to backend.");
+    }
   };
 
   // State variables for routing tabs

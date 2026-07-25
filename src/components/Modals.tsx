@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Calendar, Clock,Loader2, User, Mail, Phone, Home, DollarSign, CheckCircle, AlertCircle, MessageSquare } from "lucide-react";
+import { X, Calendar, Clock, Loader2, User, Mail, Phone, Home, DollarSign, CheckCircle, AlertCircle, MessageSquare } from "lucide-react";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../firebase";
 import { Property } from "../types";
 import { WhatsAppIcon } from "../App";
 
@@ -42,25 +44,17 @@ const cleanNotes = notes.trim();
     setError("");
 
     try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: cleanName,
-          email: cleanEmail,
-          phone: cleanPhone,
-          budget: selectedPropObj ? selectedPropObj.priceText : "Luxury Budget",
-          propertyInterest: selectedPropObj ? `Booking Tour: ${selectedPropObj.name} (${selectedPropObj.location})` : "General Tour Booking",
-          message: `Requested date: ${date} at ${time}. Client message: ${cleanNotes}`,
-        }),
+      const docRef = await addDoc(collection(db, "leads"), {
+        name: cleanName,
+        email: cleanEmail,
+        phone: cleanPhone,
+        budget: selectedPropObj ? selectedPropObj.priceText : "Luxury Budget",
+        propertyInterest: selectedPropObj ? `Booking Tour: ${selectedPropObj.name} (${selectedPropObj.location})` : "General Tour Booking",
+        message: `Requested date: ${date} at ${time}. Client message: ${cleanNotes}`,
+        createdAt: Date.now(),
       });
 
-      if (!response.ok) {
-  throw new Error("Unable to submit booking.");
-}
-
-const data = await response.json();
-      if (data.success) {
+      if (docRef.id) {
         setSuccess(true);
         onLeadCaptured();
         // Reset form
@@ -316,25 +310,17 @@ export function CallModal({ isOpen, onClose, onLeadCaptured }: CallModalProps) {
 
     setSubmitting(true);
     try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: cleanName,
-          email: "callback-request@local",
-          phone: cleanPhone,
-          budget: "Flexible / Not disclosed",
-          propertyInterest: "Immediate Callback Request",
-          message: "Requesting a rapid callback from a Hrida Propnest senior agent.",
-        }),
+      const docRef = await addDoc(collection(db, "leads"), {
+        name: cleanName,
+        email: "callback-request@local",
+        phone: cleanPhone,
+        budget: "Flexible / Not disclosed",
+        propertyInterest: "Immediate Callback Request",
+        message: "Requesting a rapid callback from a Hrida Propnest senior agent.",
+        createdAt: Date.now(),
       });
 
-      if (!response.ok) {
-  throw new Error("Unable to request callback.");
-}
-
-const data = await response.json();
-      if (data.success) {
+      if (docRef.id) {
         setSuccess(true);
         onLeadCaptured();
         const timer = window.setTimeout(() => {
