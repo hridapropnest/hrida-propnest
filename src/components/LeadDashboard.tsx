@@ -103,6 +103,7 @@ export function LeadDashboard({
   const [propTagline, setPropTagline] = useState("");
   const [propDescription, setPropDescription] = useState("");
   const [propHighlights, setPropHighlights] = useState("");
+  const [propPdfUrl, setPropPdfUrl] = useState("");
   const [city, setCity] = useState("Mumbai");
   const [area, setArea] = useState("");
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
@@ -271,29 +272,26 @@ if (file.size > 5 * 1024 * 1024) {
   // Add Property Handler
   const handleAddPropertySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!propName || !area || !city || !propPriceText) {
-  toast.error("Property Name, Area, City and Price are required.");
+    if (!propName || !area || !city || !propPdfUrl) {
+  toast.error("Brochure Name, Area, City and PDF Link are required.");
   return;
 }
-
-    const highlightsArray = propHighlights
-      ? propHighlights.split(",").map((item) => item.trim()).filter(Boolean)
-      : [];
 
     const newPropertyObj: Property = {
       id: Math.random().toString(36).substring(2, 9),
       name: propName.toUpperCase(),
-      purpose: propPurpose,
-      priceText: propPriceText,
-      priceNumerical: Number(propPriceNumerical) || 0,
-      sqft: Number(propSqft) || 1000,
-      beds: Number(propBeds) || 1,
-      baths: Number(propBaths) || 1,
+      purpose: "buy",
+      priceText: "Price on Request",
+      priceNumerical: 0,
+      sqft: 0,
+      beds: 0,
+      baths: 0,
       location: `${area}, ${city}`,
       image: propImage || IMAGE_PRESETS[0].url,
-      tagline: propTagline || "Spectacular bespoke estate",
-      description: propDescription || "Curated modern mansion crafted for distinguished lifestyles.",
-      highlights: highlightsArray.length > 0 ? highlightsArray : ["Elite Location", "Premium Automation", "24/7 Security Desk"],
+      tagline: "Exclusive Project Brochure",
+      description: propDescription || "Official luxury brochure containing floor plans, amenities, and project vision.",
+      highlights: ["Downloadable PDF", "Floor Plans", "Master Plan"],
+      pdfUrl: propPdfUrl,
     };
 
     // Update frontend state
@@ -338,6 +336,7 @@ finally {
     setPropTagline("");
     setPropDescription("");
     setPropHighlights("");
+    setPropPdfUrl("");
     setCity("Mumbai");
 setArea("");
 setShowAreaDropdown(false);
@@ -754,9 +753,9 @@ if (!response.ok) {
                     <div className="border-b border-stone-800/80 pb-4">
                       <div className="flex items-center gap-2 text-teal-400">
                         <Plus size={18} />
-                        <h3 className="font-display font-bold text-white text-base uppercase tracking-wide">Add New Boutique Signature Residence</h3>
+                        <h3 className="font-display font-bold text-white text-base uppercase tracking-wide">Upload Project Brochure</h3>
                       </div>
-                      <p className="text-xs text-stone-400 mt-1">Submit high-end properties into your active portfolio. New properties will instantly show up in the visitor carousel and metrics index.</p>
+                      <p className="text-xs text-stone-400 mt-1">Add official PDF brochures for ultra-luxury projects. They will instantly appear in the visitor brochures listing.</p>
                     </div>
 
                     <form onSubmit={handleAddPropertySubmit} className="space-y-5">
@@ -764,7 +763,7 @@ if (!response.ok) {
                       {/* Name & Location */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Residence Title *</label>
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Project Name *</label>
                           <input
                             type="text"
                             required
@@ -848,140 +847,28 @@ if (!response.ok) {
                         </div>
                       </div>
 
-                      {/* Purpose, Price text, and Numerical Price */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Purpose *</label>
-                          <div className="flex rounded-xl bg-stone-950 p-1 border border-stone-800">
-                            <button
-                              type="button"
-                              onClick={() => setPropPurpose("buy")}
-                              className={`flex-1 rounded-lg py-1.5 text-xs font-bold uppercase tracking-wider font-mono transition-all ${
-                                propPurpose === "buy"
-                                  ? "bg-stone-800 text-cyan-400"
-                                  : "text-stone-500 hover:text-stone-300"
-                              }`}
-                            >
-                              BUY
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setPropPurpose("rent")}
-                              className={`flex-1 rounded-lg py-1.5 text-xs font-bold uppercase tracking-wider font-mono transition-all ${
-                                propPurpose === "rent"
-                                  ? "bg-stone-800 text-teal-400"
-                                  : "text-stone-500 hover:text-stone-300"
-                              }`}
-                            >
-                              RENT
-                            </button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Display Price *</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="E.g., ₹ 48 Crores or ₹ 6.5 Lakhs/mo"
-                            value={propPriceText}
-                            onChange={(e) => setPropPriceText(e.target.value)}
-                            className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Sorting Price (Numeric Value) *</label>
-                          <input
-                            type="number"
-                            required
-                            placeholder="E.g., 480000000 or 650000"
-                            value={propPriceNumerical}
-                            onChange={(e) => setPropPriceNumerical(e.target.value)}
-                            className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Sqft, Beds, Baths */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Built-up Size (SQ FT) *</label>
-                          <input
-                            type="number"
-                            required
-                            placeholder="E.g., 7200"
-                            value={propSqft}
-                            onChange={(e) => setPropSqft(e.target.value)}
-                            className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Beds / BHK Configuration</label>
-                          <select
-                            value={propBeds}
-                            onChange={(e) => setPropBeds(Number(e.target.value))}
-                            className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white focus:border-teal-500 focus:outline-none"
-                          >
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-                              <option key={num} value={num} className="bg-stone-950">
-                                {num} BHK
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Bathrooms</label>
-                          <select
-                            value={propBaths}
-                            onChange={(e) => setPropBaths(Number(e.target.value))}
-                            className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white focus:border-teal-500 focus:outline-none"
-                          >
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-                              <option key={num} value={num} className="bg-stone-950">
-                                {num} Baths
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* Tagline & Highlights */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Pitch Tagline</label>
-                          <input
-                            type="text"
-                            placeholder="E.g., Seductive sunset views over Worli sea face..."
-                            value={propTagline}
-                            onChange={(e) => setPropTagline(e.target.value)}
-                            className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Amenities Highlights (Comma separated)</label>
-                          <input
-                            type="text"
-                            placeholder="E.g., Private Infinity Pool, Saint Amand Concierge, Italian Marble"
-                            value={propHighlights}
-                            onChange={(e) => setPropHighlights(e.target.value)}
-                            className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none"
-                          />
-                        </div>
-                      </div>
-
                       {/* Narrative Description */}
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Architectural Narrative / Description</label>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Description (Shown on Detail View)</label>
                         <textarea
                           rows={3}
-                          placeholder="Provide a prestigious editorial description of the estate, its materials, architecture, and layouts..."
+                          placeholder="E.g., Designed for discerning connoisseurs, this triplex penthouse blends classical architecture..."
                           value={propDescription}
                           onChange={(e) => setPropDescription(e.target.value)}
                           className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none resize-none"
+                        />
+                      </div>
+
+                      {/* PDF Brochure URL */}
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Brochure PDF Link *</label>
+                        <input
+                          type="url"
+                          required
+                          placeholder="E.g., https://example.com/lodha-malabar-brochure.pdf"
+                          value={propPdfUrl}
+                          onChange={(e) => setPropPdfUrl(e.target.value)}
+                          className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none"
                         />
                       </div>
 
@@ -1093,7 +980,7 @@ if (!response.ok) {
                             className="flex items-center gap-1.5 text-emerald-400 text-xs font-mono font-bold"
                           >
                             <CheckCircle2 size={14} className="animate-bounce" />
-                            <span>RESIDENCE SIGNATURE ADDED SUCCESSFULLY!</span>
+                            <span>BROCHURE ADDED SUCCESSFULLY!</span>
                           </motion.div>
                         ) : (
                           <span className="text-[10px] text-stone-500 font-mono">* All marked parameters required for portfolio integrity verification.</span>
@@ -1107,7 +994,7 @@ if (!response.ok) {
                         >
                           <Plus size={14} />
                           <span>
-  {savingProperty ? "Saving..." : "Add Listing to Portfolio"}
+  {savingProperty ? "Saving..." : "Upload Project Brochure"}
 </span>
                         </button>
                       </div>

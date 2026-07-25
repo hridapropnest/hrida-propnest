@@ -94,14 +94,14 @@ app.post("/api/properties", (req, res) => {
     return res.status(401).json({ success: false, error: "Unauthorized" });
   }
 
-  const { name, priceText, priceNumerical, purpose, sqft, beds, baths, location, image, tagline, description, highlights } = req.body;
-  if (!name || !priceText || !location) {
+  const { name, priceText, priceNumerical, purpose, sqft, beds, baths, location, image, tagline, description, highlights, pdfUrl } = req.body;
+  if (!name || !location) {
     return res.status(400).json({ success: false, error: "Missing required fields" });
   }
 
   const property = {
     id: randomUUID(),
-    name, priceText,
+    name, priceText: priceText || "Price upon request",
     priceNumerical: Number(priceNumerical) || 0,
     purpose: purpose === "rent" ? "rent" : "buy",
     sqft: Number(sqft) || 0,
@@ -112,6 +112,7 @@ app.post("/api/properties", (req, res) => {
     tagline: tagline || "",
     description: description || "",
     highlights: Array.isArray(highlights) ? highlights : [],
+    pdfUrl: pdfUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
     createdAt: Date.now(),
   };
 
@@ -136,6 +137,25 @@ app.post("/api/properties/sync", (req, res) => {
   writeDb("properties.json", properties);
   res.json({ success: true });
 });
+
+app.delete("/api/properties/:id", (req, res) => {
+  const pin = req.headers["x-broker-pin"];
+  if (pin !== BROKER_PIN) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+
+  const { id } = req.params;
+  const properties = readDb("properties.json");
+  const filtered = properties.filter((p: any) => p.id !== id);
+  
+  if (properties.length === filtered.length) {
+    return res.status(404).json({ success: false, error: "Property not found" });
+  }
+
+  writeDb("properties.json", filtered);
+  res.json({ success: true });
+});
+
 
 // ─── /api/chat ────────────────────────────────────────────────────────────────
 app.post("/api/chat", async (req, res) => {

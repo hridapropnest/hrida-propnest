@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Phone, 
@@ -32,7 +32,7 @@ import { AIChat } from "./components/AIChat";
 import { LeadDashboard } from "./components/LeadDashboard";
 import { ThreeBackground } from "./components/ThreeBackground";
 import { BrokerAccessModal } from "./components/BrokerAccessModal";
-import { ComingSoon, HpLogo } from "./components/ComingSoon";
+import { HpLogo } from "./components/HpLogo";
 
 export function WhatsAppIcon({ size = 16, className = "" }: { size?: number; className?: string }) {
   return (
@@ -176,6 +176,15 @@ export default function App() {
   // "home" -> Custom Landing Home page, "projects" -> Luxury Projects portfolio, "about" -> About Us page
   const [currentTab, setCurrentTab] = useState<"home" | "projects" | "about">("home");
   
+  // Carousel ref for Brochures
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = window.innerWidth * 0.5; // Scroll half the screen width
+      carouselRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   // Selected property for detailed modal or slide presentation
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [activePropertyIndex, setActivePropertyIndex] = useState<number>(0);
@@ -213,22 +222,6 @@ export default function App() {
   const [selectedArea, setSelectedArea] = useState<string>("All Locations");
   const [isAreaDropdownOpen, setIsAreaDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Owners Listing Form state
-  const [listName, setListName] = useState("");
-  const [listEmail, setListEmail] = useState("");
-  const [listPhone, setListPhone] = useState("");
-  const [listPropName, setListPropName] = useState("");
-  const [listPropType, setListPropType] = useState("Penthouse");
-  const [listCity, setListCity] = useState("Mumbai");
-  const [listSubLocation, setListSubLocation] = useState("");
-  const [isLocationSuggestionsOpen, setIsLocationSuggestionsOpen] = useState(false);
-  const [listPrice, setListPrice] = useState("");
-  const [listBeds, setListBeds] = useState(3);
-  const [listSqft, setListSqft] = useState("");
-  const [listDesc, setListDesc] = useState("");
-  const [listingSuccess, setListingSuccess] = useState(false);
-  const [listingSubmitting, setListingSubmitting] = useState(false);
 
   // Live real-time lead analytics counter (notifies dashboard)
   const [leadsCount, setLeadsCount] = useState(0);
@@ -296,52 +289,6 @@ export default function App() {
     return true;
   });
 
-  // Handle owner property listing submission
-  const handleListPropertySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!listName || !listEmail || !listPropName || !listPrice) {
-      alert("Please fill out the required owner credentials and price parameters.");
-      return;
-    }
-
-    setListingSubmitting(true);
-    try {
-      const displayLocation = listSubLocation ? `${listSubLocation}, ${listCity}` : listCity;
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: listName,
-          email: listEmail,
-          phone: listPhone || "Not provided",
-          budget: `Target Value: ₹ ${listPrice}`,
-          propertyInterest: `OWNER LISTING SUBMISSION: ${listPropName} in ${displayLocation}`,
-          message: `Owner submitted a ${listPropType} for listing. Specs: ${listBeds} BHK, ${listSqft || "N/A"} SqFt. Description: ${listDesc}`,
-        }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setListingSuccess(true);
-        handleLeadCaptured();
-        // Reset state
-        setListName("");
-        setListEmail("");
-        setListPhone("");
-        setListPropName("");
-        setListSubLocation("");
-        setIsLocationSuggestionsOpen(false);
-        setListPrice("");
-        setListSqft("");
-        setListDesc("");
-      }
-    } catch (err) {
-      alert("Network error listing property. Please contact broker hotline.");
-    } finally {
-      setListingSubmitting(false);
-    }
-  };
-
   // Navigate to detailed property slide
   const openPropertyDetail = (property: Property, index: number) => {
     setSelectedProperty(property);
@@ -374,24 +321,20 @@ export default function App() {
     <div className="relative min-h-screen bg-stone-950 font-sans text-stone-100 overflow-x-hidden selection:bg-cyan-500 selection:text-black">
       
       {/* 3D THREE.JS RESPONSIVE SCROLL BACKGROUND */}
-      <ThreeBackground />
+      {!(currentTab === "home" && !isDetailView) && <ThreeBackground />}
 
       {/* HEADER SECTION */}
-      <header className="relative z-40 mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+      {currentTab !== "projects" && (
+        <>
+        <header className="relative z-40 mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between border-b border-stone-800/60 pb-4 bg-stone-950/40 backdrop-blur-md rounded-b-xl px-4">
           
           {/* Logo Brand */}
           <div className="flex items-center gap-2.5 cursor-pointer select-none" onClick={() => { setIsDetailView(false); setCurrentTab("home"); handleLogoClick(); }}>
-            <HpLogo className="w-9 h-9" glow={false} />
-            <div className="flex flex-col">
-              <span className="font-serif font-bold text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-cyan-100 via-cyan-400 to-cyan-600 uppercase leading-none">
-                HRIDA
-              </span>
-              <span className="text-[7px] font-sans font-black tracking-[0.3em] text-cyan-400 uppercase leading-none mt-1">
-                — PROPNEST —
-              </span>
-              <span className="text-[5px] font-sans font-bold tracking-[0.4em] text-cyan-400/80 uppercase leading-none mt-1 pl-0.5">
-                FIND | INVEST | GROW
+            <HpLogo className="w-12 h-12" glow={false} />
+            <div className="flex flex-col justify-center">
+              <span className="font-serif font-bold text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-yellow-500 to-yellow-700 uppercase leading-none">
+                HRIDA PROPNEST
               </span>
             </div>
           </div>
@@ -487,6 +430,8 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      </>
+      )}
 
       {/* CORE LAYOUT COMPONENT */}
       <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -504,484 +449,419 @@ export default function App() {
               
               {currentTab === "home" ? (
                 /* ======================================================================= */
-                /* CUSTOM LANDING HOME PAGE AS REQUESTED                                   */
+                /* CUSTOM LANDING HOME PAGE AS REQUESTED (IMMERSIVE CINEMATIC)             */
                 /* ======================================================================= */
-                <div className="space-y-16 py-4 md:py-8">
+                <div className="-mt-8 relative w-screen" style={{ marginLeft: "calc(50% - 50vw)" }}>
                   
-                  {/* HERO SEGMENT WITH BRANDING AND PARALLAX TRIGGERS */}
-                  <div className="relative text-center py-10 md:py-20 flex flex-col items-center">
+                  {/* FULL-SCREEN IMMERSIVE HERO */}
+                  <div className="relative h-[95vh] w-full overflow-hidden flex flex-col justify-end">
                     
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
+                    {/* Background Media */}
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 1.05 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="mb-3 inline-flex items-center gap-2 rounded-full bg-stone-900/80 border border-stone-800/80 px-4 py-1"
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="absolute inset-0 z-0"
                     >
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                      </span>
-                      <span className="text-[10px] uppercase tracking-[0.2em] font-mono text-cyan-400 font-bold">
-                        mumbai • thane • navi mumbai
-                      </span>
+                      <img 
+                        src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80" 
+                        alt="Cinematic luxury estate" 
+                        className="w-full h-full object-cover object-center origin-center animate-cinematic-pan"
+                      />
+                      {/* Deep moody gradients */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-stone-950/60 via-transparent to-stone-950" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-stone-950/80 via-stone-950/20 to-transparent" />
                     </motion.div>
 
-                    <h1 className="font-display text-4xl font-black uppercase tracking-tight text-white sm:text-6xl lg:text-7xl leading-none">
-                      THE NEW STANDARDS OF <br />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-cyan-400 to-cyan-600 italic">
-                        LUXURY LIVING
-                      </span>
-                    </h1>
-
-                    <p className="mt-5 max-w-2xl text-stone-400 text-xs sm:text-sm leading-relaxed">
-                      Acquire, lease, or list extraordinary residences across Mumbai.
-                    </p>
-
-                    <div className="mt-8 flex flex-wrap justify-center gap-4">
-                      <button
-                        onClick={() => setCurrentTab("projects")}
-                        className="rounded-full bg-cyan-500 text-black px-6 py-3.5 text-xs font-bold uppercase tracking-wider font-mono shadow-lg hover:shadow-cyan-400/20 transition-all cursor-pointer flex items-center gap-2"
+                    {/* Content Overlay */}
+                    <div className="relative z-10 px-6 sm:px-12 md:px-20 pb-24 md:pb-32 w-full flex flex-col items-center text-center">
+                      <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
+                        className="flex flex-col items-center"
                       >
-                        <span>Explore Projects</span>
-                        <ArrowRight size={14} />
-                      </button>
-                      <button
-                        onClick={() => setCurrentTab("about")}
-                        className="rounded-full border border-stone-800 bg-stone-900/80 hover:border-stone-700 text-stone-300 hover:text-white px-6 py-3.5 text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer flex items-center gap-2"
+                        <h1 className="font-serif text-5xl sm:text-7xl md:text-8xl font-black text-white leading-[0.9] tracking-tight max-w-4xl mx-auto">
+                          Redefining <br />
+                          <span className="italic font-light text-stone-300">Legacy.</span>
+                        </h1>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
+                        className="mt-8 md:mt-12 max-w-md mx-auto flex flex-col items-center"
                       >
-                        <span>Contact Concierge</span>
-                        <span>🏡</span>
-                      </button>
+                        <p className="text-stone-300/80 text-sm md:text-base leading-relaxed font-light">
+                          Exclusive off-market acquisitions and bespoke leasing for Mumbai’s most distinguished enclaves.
+                        </p>
+                        
+                        <div className="mt-10 flex justify-center">
+                          <button
+                            onClick={() => setCurrentTab("projects")}
+                            className="group flex items-center gap-4 text-xs font-mono uppercase tracking-[0.25em] text-white hover:text-cyan-400 transition-colors cursor-pointer"
+                          >
+                            <div className="h-10 w-10 rounded-full border border-white/30 flex items-center justify-center group-hover:border-cyan-400/50 transition-colors backdrop-blur-sm">
+                              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                            </div>
+                            <span>Enter Portfolio</span>
+                          </button>
+                        </div>
+                      </motion.div>
                     </div>
 
+                    {/* Scroll Indicator */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 1.5, duration: 1 }}
+                      className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 z-10"
+                    >
+                      <span className="text-[9px] font-mono uppercase tracking-[0.4em] text-stone-500 origin-center rotate-90 translate-y-4">Scroll</span>
+                      <div className="w-px h-16 bg-gradient-to-b from-stone-600 to-transparent" />
+                    </motion.div>
                   </div>
 
-                  {/* METRICS & PROOFS OF SUPERIORITY */}
-                  <div className="border-t border-stone-800/50 pt-12 pb-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                    <div className="p-4 rounded-2xl bg-stone-900/20 border border-stone-900/40">
-                      <span className="font-display text-3xl font-black text-cyan-400 font-mono">100%</span>
-                      <p className="text-[10px] uppercase tracking-widest font-mono text-stone-500 mt-1">Physical Verification</p>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-stone-900/20 border border-stone-900/40">
-                      <span className="font-display text-3xl font-black text-cyan-400 font-mono">₹ 450+ Cr</span>
-                      <p className="text-[10px] uppercase tracking-widest font-mono text-stone-500 mt-1">Transacted Volume</p>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-stone-900/20 border border-stone-900/40">
-                      <span className="font-display text-3xl font-black text-cyan-400 font-mono">24/7</span>
-                      <p className="text-[10px] uppercase tracking-widest font-mono text-stone-500 mt-1">Contact Support</p>
+                  {/* IMMERSIVE SECTION 2: THE EXPERIENCE */}
+                  <div className="relative min-h-screen w-full bg-stone-950 py-32 px-6 sm:px-12 md:px-20 flex flex-col justify-center overflow-hidden">
+                    
+                    {/* Abstract atmospheric background elements */}
+                    <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-cyan-900/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+                    
+                    <div className="max-w-5xl mx-auto w-full flex flex-col items-center text-center relative z-10">
+                      
+                      <div className="space-y-8 flex flex-col items-center">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="h-px w-12 bg-cyan-500/50" />
+                          <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-cyan-400/80">The Approach</span>
+                        </div>
+                        <h2 className="font-serif text-4xl sm:text-5xl md:text-6xl text-white leading-[1.1] max-w-2xl">
+                          Curated for <br />
+                          the <i className="text-stone-400 font-light">Discerning Few.</i>
+                        </h2>
+                        <p className="text-stone-400 text-sm leading-relaxed max-w-xl font-light">
+                          We bypass the traditional market. Our private network grants access to unlisted architectural marvels across Altamount Road, Worli Sea Face, and Malabar Hill before they ever reach the public eye.
+                        </p>
+                        <div className="pt-8">
+                          <button
+                            onClick={() => setCurrentTab("about")}
+                            className="text-xs font-mono uppercase tracking-[0.2em] text-stone-300 hover:text-white border-b border-stone-700 hover:border-cyan-400 pb-2 transition-all cursor-pointer"
+                          >
+                            Speak with an Advisor
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="relative h-[600px] w-full rounded-sm overflow-hidden mt-16 max-w-4xl mx-auto">
+                        <img 
+                          src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80" 
+                          alt="Luxury interior architecture" 
+                          className="w-full h-full object-cover object-center filter grayscale-[30%] hover:grayscale-0 transition-all duration-1000 scale-100 hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-stone-950/20" />
+                      </div>
+
                     </div>
                   </div>
 
-                  {/* LUXURY EXPERT STATEMENT / BIOGRAPHY SIGNATURE */}
-                  <div className="rounded-2xl border border-cyan-500/10 bg-cyan-500/[0.01] p-6 sm:p-8 text-center max-w-4xl mx-auto">
-                    <span className="text-cyan-400 text-xs">✦ ✦ ✦</span>
-                    <p className="italic text-stone-300 text-xs sm:text-sm mt-3 leading-relaxed">
-                      "At Hrida Propnest, we don't present real estate listings; we preserve architectural heritage. From the billionaire enclaves of Altamount Road to spectacular coastal villas, every residence represents an exceptional standard of lifestyle across Mumbai. Our team secures seamless RERA-compliant acquisitions with absolute discretion."
-                    </p>
-                    <div className="mt-4">
-                      <span className="text-stone-400 font-mono text-xs font-bold uppercase tracking-wider block">Chetan Pansare</span>
-                      <span className="text-[9px] font-mono text-stone-500 block uppercase tracking-widest">Founder, Hrida Propnest</span>
+                  {/* FULL-WIDTH CINEMATIC STATS STRIP */}
+                  <div className="relative h-[400px] w-full bg-stone-900 overflow-hidden flex items-center">
+                    <img 
+                      src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=2000&q=80" 
+                      alt="Architecture detail" 
+                      className="absolute inset-0 w-full h-full object-cover object-center opacity-20 filter grayscale"
+                    />
+                    <div className="absolute inset-0 bg-stone-950/70" />
+                    
+                    <div className="relative z-10 w-full max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 text-center divide-y md:divide-y-0 md:divide-x divide-stone-800">
+                      <div className="py-6">
+                        <div className="font-serif text-5xl md:text-6xl text-white mb-2">₹450<span className="text-3xl text-cyan-500">+</span></div>
+                        <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-stone-400">Crores Transacted</div>
+                      </div>
+                      <div className="py-6">
+                        <div className="font-serif text-5xl md:text-6xl text-white mb-2">100<span className="text-3xl text-cyan-500">%</span></div>
+                        <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-stone-400">Title & RERA Verified</div>
+                      </div>
+                      <div className="py-6">
+                        <div className="font-serif text-5xl md:text-6xl text-white mb-2">24<span className="text-3xl text-cyan-500">/</span>7</div>
+                        <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-stone-400">Private Concierge</div>
+                      </div>
                     </div>
                   </div>
 
                 </div>
               ) : currentTab === "projects" ? (
                 /* ======================================================================= */
-                /* PROJECTS PORTFOLIO TAB                                                  */
+                /* PROJECTS PORTFOLIO TAB - APPLE STYLE VERTICAL SNAP                      */
                 /* ======================================================================= */
-                <>
-                  {/* HERO BLOCK */}
-                  <div className="relative text-center py-10 md:py-16 flex flex-col items-center">
-                    
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.1 }}
-                      className="mb-3 inline-flex items-center gap-2 rounded-full bg-stone-900/80 border border-stone-800/80 px-4 py-1"
-                    >
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                      </span>
-                      <span className="text-[10px] uppercase tracking-widest font-mono text-stone-400 font-bold">
-                        Now Active: mumbai • thane • navi mumbai
-                      </span>
-                    </motion.div>
+                <div className="fixed inset-0 z-[100] bg-stone-950 overflow-y-auto overflow-x-hidden snap-y snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                  
+                  {/* Floating Header */}
+                  <div className="fixed top-0 left-0 right-0 z-50 p-4 md:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-b from-stone-950/90 via-stone-950/50 to-transparent pointer-events-none">
+                     <div className="flex gap-3 pointer-events-auto">
+                        <button 
+                          onClick={() => setCurrentTab("home")} 
+                          className="flex items-center gap-2 text-stone-300 hover:text-white transition-colors bg-stone-900/60 backdrop-blur-md px-5 py-2.5 rounded-full border border-stone-800 shadow-xl"
+                        >
+                          <ChevronLeft size={16} /> <span className="font-mono text-xs font-bold uppercase tracking-widest">Back</span>
+                        </button>
 
-                    {/* Heading Title tailored for India */}
-                    <motion.div
-                      style={{
-                        y: entranceAnimationValues.titleY,
-                        opacity: entranceAnimationValues.titleOpacity,
-                        scale: entranceAnimationValues.titleScale,
-                      }}
-                      transition={{ type: "spring", stiffness: 100, damping: 15 }}
-                      className="max-w-4xl"
-                    >
-                      <h1 className="font-display text-4xl font-black uppercase tracking-tight text-white sm:text-6xl lg:text-7xl leading-none">
-                        FIND | INVEST | GROW
-                        <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-cyan-400 to-cyan-600 italic">
-                          YOUR MUMBAI LUXURY PARTNER
-                        </span>
-                      </h1>
-                      <motion.p
-                        transition={{ delay: 0.25 }}
-                        className="mt-4 max-w-xl text-stone-400 text-xs sm:text-sm leading-relaxed"
-                      >
-                        Acquire, lease, or list extraordinary residences across Mumbai.
-                      </motion.p>
-                    </motion.div>
-
-                    {/* GEOGRAPHY AREA FILTER */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.35 }}
-                      className="relative mt-6 z-30"
-                    >
-                      <button
-                        id="area-dropdown-btn"
-                        onClick={() => setIsAreaDropdownOpen(!isAreaDropdownOpen)}
-                        className="flex items-center gap-2 rounded-full border border-stone-800 bg-stone-900/90 px-5 py-2.5 text-xs font-bold uppercase tracking-widest font-mono text-stone-200 hover:border-cyan-500/40 hover:bg-stone-900 transition-all cursor-pointer shadow-xl"
-                      >
-                        <Compass size={13} className="text-cyan-400" />
-                        <span>REGION: {selectedArea}</span>
-                        <span className="text-[8px] text-stone-500">▼</span>
-                      </button>
-
-                      <AnimatePresence>
-                        {isAreaDropdownOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 rounded-xl border border-stone-800 bg-stone-900 p-2 shadow-2xl z-30"
+                        <div className="relative">
+                          <button 
+                            onClick={() => setIsAreaDropdownOpen(!isAreaDropdownOpen)} 
+                            className="flex items-center gap-2 text-stone-200 hover:text-white transition-colors bg-stone-900/60 backdrop-blur-md px-5 py-2.5 rounded-full border border-stone-800 font-mono text-xs font-bold uppercase tracking-widest shadow-xl"
                           >
-                            {["All Locations", "Mumbai", "Thane", "Navi Mumbai"].map((area) => (
-                              <button
-                                key={area}
-                                onClick={() => {
-                                  setSelectedArea(area);
-                                  setIsAreaDropdownOpen(false);
-                                }}
-                                className={`w-full rounded-lg px-4 py-2 text-left text-xs font-semibold font-mono tracking-wider transition-colors ${
-                                  selectedArea === area
-                                    ? "bg-cyan-500/10 text-cyan-400"
-                                    : "text-stone-400 hover:bg-stone-800 hover:text-white"
-                                }`}
+                            <Compass size={14} className="text-cyan-400"/>
+                            {selectedArea}
+                          </button>
+                          
+                          <AnimatePresence>
+                            {isAreaDropdownOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="absolute top-14 left-0 w-56 bg-stone-900 border border-stone-800 rounded-2xl p-2 shadow-2xl"
                               >
-                                {area === "All Locations" ? "🌍 All Regions" : area === "Mumbai" ? "🌇 Mumbai" : area === "Thane" ? "⛰️ Thane Region" : "🌊 Navi Mumbai"}
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
-
-                  </div>
-
-                  {/* BUY & RENT CARDS GRID DISPLAY */}
-                  <div className="border-t border-stone-800/50 pt-10">
-                      
-                      <div className="text-center mb-8">
-                        <span className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">
-                          Active Luxury Portfolio
-                        </span>
-                        <h2 className="font-display text-xl font-bold uppercase tracking-wide text-white mt-1">
-                          EXHIBIT COLLECTION: PRESTIGIOUS REAL ESTATE
-                        </h2>
-                      </div>
-
-                      {/* Modern Search Input */}
-                      <div className="max-w-md mx-auto mb-8 relative">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                          <Search className="h-4 w-4 text-stone-500" />
+                                {["All Locations", "Mumbai", "Thane", "Navi Mumbai"].map((area) => (
+                                  <button
+                                    key={area}
+                                    onClick={() => {
+                                      setSelectedArea(area);
+                                      setIsAreaDropdownOpen(false);
+                                    }}
+                                    className={`w-full rounded-xl px-4 py-3 text-left text-xs font-bold font-mono tracking-wider transition-colors ${
+                                      selectedArea === area
+                                        ? "bg-cyan-500/10 text-cyan-400"
+                                        : "text-stone-400 hover:bg-stone-800 hover:text-white"
+                                    }`}
+                                  >
+                                    {area === "All Locations" ? "🌍 All Regions" : area === "Mumbai" ? "🌇 Mumbai" : area === "Thane" ? "⛰️ Thane Region" : "🌊 Navi Mumbai"}
+                                  </button>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
+                     </div>
+
+                     <div className="relative pointer-events-auto w-full sm:w-auto">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
                         <input
                           type="text"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Filter by name or location keyword..."
-                          className="w-full rounded-full border border-stone-800 bg-stone-900/60 py-2.5 pl-11 pr-10 text-xs font-mono text-white placeholder-stone-500 focus:border-cyan-500/50 focus:bg-stone-900/90 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none transition-all shadow-inner"
+                          placeholder="Search luxury properties..."
+                          className="w-full sm:w-72 bg-stone-900/60 backdrop-blur-md border border-stone-800 rounded-full py-2.5 pl-12 pr-4 text-sm font-mono text-white placeholder-stone-500 focus:outline-none focus:border-cyan-500/50 shadow-xl"
                         />
                         {searchQuery && (
                           <button
                             onClick={() => setSearchQuery("")}
-                            className="absolute inset-y-0 right-0 flex items-center pr-4 text-stone-500 hover:text-stone-300 transition-colors"
-                            title="Clear search"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300"
                           >
-                            <X className="h-3.5 w-3.5" />
+                            <X className="h-4 w-4" />
                           </button>
                         )}
-                      </div>
+                     </div>
+                  </div>
 
-                      {/* Curated Grid matching filters */}
-                      {filteredProperties.length === 0 ? (
-                        <div className="text-center py-20 rounded-2xl border border-stone-800 bg-stone-900/20 backdrop-blur-sm">
-                          <BadgeAlert size={36} className="text-stone-600 mx-auto mb-2" />
-                          <p className="text-sm text-stone-400 font-mono">No matching boutique properties currently found.</p>
-                          <button 
-                            onClick={() => {
-                              setSelectedArea("All Locations");
-                              setSearchQuery("");
-                            }}
-                            className="mt-4 text-xs font-mono text-cyan-400 underline hover:text-cyan-300"
-                          >
-                            Reset all filters to view all listings
-                          </button>
-                        </div>
-                      ) : (
-                        <motion.div
-                          key={`${currentTab}-${selectedArea}-${searchQuery}`}
-                          variants={galleryContainerVariants}
-                          initial="hidden"
-                          animate="show"
-                          className="grid grid-cols-1 gap-6 md:grid-cols-3"
-                        >
-                          {filteredProperties.map((property, idx) => (
-                            <motion.div
-                              key={property.id}
-                              variants={galleryCardVariants}
-                              whileHover={{ y: -8 }}
-                              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                              className="group relative h-[420px] overflow-hidden rounded-2xl border border-stone-800/80 bg-stone-900/40 backdrop-blur-sm shadow-2xl cursor-pointer"
-                              onClick={() => openPropertyDetail(property, idx)}
-                            >
-                              {/* Photo */}
-                              <img 
-                                src={property.image} 
-                                alt={property.name} 
-                                className="h-full w-full object-cover grayscale-[15%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
-                              />
-                              
-                              <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/45 to-transparent" />
-
-                              {/* Top Badges */}
-                              <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
-                                <span className="rounded-md bg-stone-950/90 border border-stone-800/60 px-2.5 py-1 text-[10px] font-mono tracking-wider font-semibold text-stone-300">
-                                  {property.location}
-                                </span>
-                                <div className="flex gap-1.5">
-                                  <span className={`rounded-md px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-wider ${property.purpose === "buy" ? "bg-cyan-500 text-black shadow-md" : "bg-teal-500/20 border border-teal-500/35 text-teal-300"}`}>
-                                    {property.purpose === "buy" ? "Acquisition" : "Lease"}
-                                  </span>
-                                  <span className="rounded-md bg-cyan-400/10 border border-cyan-400/20 px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider text-cyan-400">
-                                    {property.beds} BHK
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Bottom info panel */}
-                              <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
-                                <span className="text-[10px] font-bold tracking-widest text-cyan-400 font-mono uppercase block mb-0.5">
-                                  {property.sqft.toLocaleString()} SQ FT • PRIVATE
-                                </span>
-
-                                <h3 className="font-serif text-xl font-bold tracking-wide text-white group-hover:text-cyan-300 transition-colors">
-                                  {property.name}
-                                </h3>
-
-                                <p className="text-xs text-stone-400 line-clamp-1 mt-1">
-                                  {property.tagline}
-                                </p>
-
-                                <div className="mt-4 border-t border-stone-800/80 pt-3 flex items-center justify-between">
-                                  <span className="font-display font-black text-white text-base sm:text-lg font-mono">
-                                    {property.priceText}
-                                  </span>
-
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-950 border border-stone-800 group-hover:bg-amber-400 group-hover:border-amber-400 text-stone-400 group-hover:text-black transition-all">
-                                    <ChevronRight size={15} />
-                                  </div>
-                                </div>
-                              </div>
-
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      )}
-
+                  {filteredProperties.length === 0 ? (
+                    <div className="h-screen w-full flex flex-col items-center justify-center snap-start snap-always">
+                       <BadgeAlert size={48} className="text-stone-700 mb-6" />
+                       <h2 className="text-2xl text-stone-500 font-serif uppercase tracking-widest">No brochures found.</h2>
+                       <button 
+                          onClick={() => { setSelectedArea("All Locations"); setSearchQuery(""); }}
+                          className="mt-6 text-xs font-mono font-bold uppercase tracking-widest text-cyan-500 hover:text-cyan-400 underline"
+                       >
+                         Reset Filters
+                       </button>
                     </div>
-                  </>
+                  ) : (
+                    filteredProperties.map((property, idx) => (
+                      <div key={property.id} className="relative h-screen w-full snap-start snap-always flex items-center justify-center overflow-hidden bg-stone-950">
+                        
+                        {/* Immersive Background */}
+                        <motion.img 
+                          initial={{ scale: 1.1 }}
+                          whileInView={{ scale: 1 }}
+                          transition={{ duration: 1.5, ease: "easeOut" }}
+                          src={property.image}
+                          alt={property.name}
+                          className="absolute inset-0 w-full h-full object-cover origin-center"
+                        />
+                        <div className="absolute inset-0 bg-stone-950/40" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-transparent to-stone-950/40" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-stone-950/80 via-transparent to-transparent" />
+
+                        {/* Property Content */}
+                        <div className="relative z-10 text-center px-6 max-w-5xl flex flex-col items-center mt-20 md:mt-0">
+                           <motion.div 
+                             initial={{ opacity: 0, y: 20 }}
+                             whileInView={{ opacity: 1, y: 0 }}
+                             transition={{ duration: 0.8, delay: 0.2 }}
+                             className="mb-6 rounded-full bg-stone-950/80 border border-stone-800/80 px-5 py-2 backdrop-blur-md inline-block shadow-2xl"
+                           >
+                             <span className="text-cyan-400 font-mono text-xs font-bold tracking-[0.3em] uppercase">
+                               {property.location}
+                             </span>
+                           </motion.div>
+                           
+                           <motion.h2
+                             initial={{ opacity: 0, y: 40 }}
+                             whileInView={{ opacity: 1, y: 0 }}
+                             transition={{ duration: 1, delay: 0.3 }}
+                             className="text-5xl sm:text-6xl md:text-8xl lg:text-[7rem] font-display font-black text-white uppercase tracking-tighter leading-[0.9] mb-8 drop-shadow-2xl"
+                           >
+                             {property.name}
+                           </motion.h2>
+
+                           <motion.p
+                             initial={{ opacity: 0 }}
+                             whileInView={{ opacity: 1 }}
+                             transition={{ duration: 1, delay: 0.5 }}
+                             className="text-stone-300 max-w-2xl text-sm md:text-lg font-light leading-relaxed mb-12 drop-shadow-lg"
+                           >
+                             {property.description}
+                           </motion.p>
+
+                           <motion.button
+                             initial={{ opacity: 0, scale: 0.9 }}
+                             whileInView={{ opacity: 1, scale: 1 }}
+                             transition={{ duration: 0.5, delay: 0.7 }}
+                             onClick={() => window.open(property.pdfUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", "_blank")}
+                             className="group relative overflow-hidden rounded-full bg-cyan-500/10 border border-cyan-500/30 px-8 py-4 backdrop-blur-md transition-all hover:bg-cyan-500/20 hover:border-cyan-400 shadow-[0_0_40px_rgba(6,182,212,0.15)] hover:shadow-[0_0_60px_rgba(6,182,212,0.3)]"
+                           >
+                              <span className="font-mono text-xs md:text-sm font-bold uppercase tracking-widest text-cyan-400 group-hover:text-cyan-200 flex items-center gap-3">
+                                Download Brochure <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                              </span>
+                           </motion.button>
+                        </div>
+
+                        {/* Scroll Indicator */}
+                        {idx < filteredProperties.length - 1 && (
+                          <motion.div 
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            transition={{ duration: 1, delay: 1 }}
+                            className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 animate-bounce"
+                          >
+                            <span className="text-[9px] uppercase font-mono tracking-widest text-stone-400">Scroll</span>
+                            <div className="w-[1px] h-12 bg-gradient-to-b from-stone-400 to-transparent" />
+                          </motion.div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
                 ) : (
                     /* ======================================================================= */
-                    /* TAB: ABOUT US & REPRESENTATION DESK                                     */
+                    /* TAB: ABOUT US, VISION, MISSION & CONTACT                                */
                     /* ======================================================================= */
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="space-y-12 max-w-5xl mx-auto"
+                      className="space-y-12 max-w-5xl mx-auto py-8"
                     >
-                      {/* Ethos / Introduction */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-stone-900/40 border border-stone-800/80 backdrop-blur-md rounded-3xl p-8 shadow-2xl">
-                        <div className="space-y-4">
-                          <span className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">
-                            Mumbai's Elite Real Estate Boutique
-                          </span>
-                          <h2 className="font-serif text-3xl font-black text-white leading-tight uppercase">
-                            Discretion. Heritage. Advisory.
-                          </h2>
-                          <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-light">
-                            Founded on the principles of absolute client discretion and deep structural evaluation, Hrida Propnest represents the pinnacle of residential advisory in Mumbai. We represent South Mumbai's prestigious enclaves, private beachside villas in Alibaug, and luxury penthouses.
-                          </p>
-                          <div className="space-y-2.5 pt-2">
-                            <div className="flex items-start gap-2 text-xs text-stone-300">
-                              <span className="text-cyan-400 font-bold">✓</span>
-                              <span><strong>RERA Compliance Assured</strong>: We physically validate and verify titles for every catalog entry.</span>
-                            </div>
-                            <div className="flex items-start gap-2 text-xs text-stone-300">
-                              <span className="text-cyan-400 font-bold">✓</span>
-                              <span><strong>Private Placement Portfolio</strong>: Custom inventory curation for family offices and HNIs.</span>
-                            </div>
-                            <div className="flex items-start gap-2 text-xs text-stone-300">
-                              <span className="text-cyan-400 font-bold">✓</span>
-                              <span><strong>Bespoke Advisory Desk</strong>: Structural narrative evaluation and RERA registration services.</span>
-                            </div>
-                          </div>
+                      {/* Hero Section */}
+                      <div className="text-center space-y-4 mb-16">
+                        <span className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">
+                          Mumbai's Elite Real Estate Boutique
+                        </span>
+                        <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.1] uppercase max-w-3xl mx-auto drop-shadow-2xl">
+                          Discretion. Heritage. Advisory.
+                        </h2>
+                        <p className="text-sm sm:text-base text-stone-400 leading-relaxed font-light max-w-2xl mx-auto mt-6">
+                          Founded on the principles of absolute client discretion and deep structural evaluation, Hrida Propnest represents the pinnacle of residential advisory in Mumbai.
+                        </p>
+                      </div>
+
+                      {/* Vision & Mission Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Vision Card */}
+                        <div className="relative overflow-hidden bg-stone-900/60 border border-stone-800 backdrop-blur-md rounded-3xl p-10 shadow-2xl group hover:border-cyan-500/30 transition-all duration-500">
+                           <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-[50px] rounded-full group-hover:bg-cyan-500/20 transition-all duration-500" />
+                           <h3 className="relative z-10 font-display text-2xl font-bold text-white uppercase tracking-wider mb-6 flex items-center gap-3">
+                             <Sparkles className="text-cyan-400" size={24} /> Our Vision
+                           </h3>
+                           <p className="relative z-10 text-stone-300 leading-relaxed font-light text-sm">
+                             To be the definitive authority and most trusted enclave for ultra-luxury real estate transactions across South Mumbai, offering an unparalleled level of access and exclusive curation that traditional brokerages simply cannot match. We envision a future where elite property acquisition is completely seamless, private, and breathtakingly bespoke.
+                           </p>
                         </div>
 
-                        {/* Founder Card */}
-                        <div className="border border-stone-800/80 bg-stone-900/60 rounded-2xl p-6 relative overflow-hidden flex flex-col items-center text-center shadow-xl">
-                          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-cyan-500/10 to-transparent blur-2xl rounded-full" />
-                          <div className="h-16 w-16 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4 shadow-lg">
-                            <User size={32} />
-                          </div>
-                          <h3 className="font-serif text-lg font-bold text-white uppercase">Chetan Pansare</h3>
-                          <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mt-0.5">Founder & Managing Advisor</span>
-                          <p className="text-[11px] italic text-stone-400 leading-relaxed mt-4">
-                            "Mumbai's real estate represents more than cement and steel; it holds architectural heritage and legacy. Our team is dedicated to providing physical title verification and representing luxury listings with absolute fidelity and privacy."
-                          </p>
+                        {/* Mission Card */}
+                        <div className="relative overflow-hidden bg-stone-900/60 border border-stone-800 backdrop-blur-md rounded-3xl p-10 shadow-2xl group hover:border-cyan-500/30 transition-all duration-500">
+                           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full group-hover:bg-emerald-500/20 transition-all duration-500" />
+                           <h3 className="relative z-10 font-display text-2xl font-bold text-white uppercase tracking-wider mb-6 flex items-center gap-3">
+                             <Building className="text-emerald-400" size={24} /> Our Mission
+                           </h3>
+                           <p className="relative z-10 text-stone-300 leading-relaxed font-light text-sm">
+                             To rigorously protect our clients' interests by conducting comprehensive physical title verifications, providing elite structural narrative evaluations, and maintaining a strictly RERA-compliant portfolio. We are on a mission to represent only the highest echelon of architectural marvels and deliver them with absolute fidelity and zero friction.
+                           </p>
                         </div>
                       </div>
 
-                      {/* Interactive Representation Inquiry Form */}
-                      <div className="bg-stone-900/40 border border-stone-800/80 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-2xl">
-                        {listingSuccess ? (
-                          <div className="text-center py-8">
-                            <div className="h-14 w-14 bg-cyan-500/10 text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                              <CheckCircle2 size={30} />
-                            </div>
-                            <h3 className="font-display text-xl font-bold text-white uppercase">Inquiry Securely Logged</h3>
-                            <p className="mt-2 text-xs text-stone-400 max-w-md mx-auto leading-relaxed">
-                              Namaste! Chetan Pansare's personal desk has received your proposal. A senior private listing representative will contact you shortly.
+                      {/* Contact & Founder Section */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mt-12">
+                        
+                        {/* Contact & Socials Grid */}
+                        <div className="md:col-span-7 bg-stone-900/40 border border-stone-800/80 backdrop-blur-md rounded-3xl p-8 sm:p-10 shadow-2xl flex flex-col justify-between">
+                           <div>
+                             <span className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-cyan-400 mb-2 block">Concierge Desk</span>
+                             <h3 className="font-serif text-3xl font-bold text-white uppercase mb-8">Connect With Us</h3>
+                             
+                             <div className="space-y-6">
+                               <a href="tel:+919819876103" className="group flex items-center gap-5 p-4 rounded-2xl bg-stone-950/50 border border-stone-800 hover:border-cyan-500/40 transition-all">
+                                 <div className="w-12 h-12 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                   <Phone size={20} />
+                                 </div>
+                                 <div>
+                                   <div className="text-[10px] font-mono text-stone-500 uppercase tracking-widest mb-1">Direct Hotline</div>
+                                   <div className="text-white font-mono text-lg font-bold tracking-wider">+91 98198 76103</div>
+                                 </div>
+                               </a>
+                               
+                               <a href="mailto:hridapropnest@gmail.com" className="group flex items-center gap-5 p-4 rounded-2xl bg-stone-950/50 border border-stone-800 hover:border-cyan-500/40 transition-all">
+                                 <div className="w-12 h-12 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                   <Mail size={20} />
+                                 </div>
+                                 <div>
+                                   <div className="text-[10px] font-mono text-stone-500 uppercase tracking-widest mb-1">Private Email Inquiry</div>
+                                   <div className="text-white text-sm font-medium tracking-wide">hridapropnest@gmail.com</div>
+                                 </div>
+                               </a>
+                             </div>
+                           </div>
+
+                           <div className="mt-10 pt-8 border-t border-stone-800">
+                             <div className="text-[10px] font-mono text-stone-500 uppercase tracking-widest mb-4">Follow Our Collection</div>
+                             <div className="flex flex-wrap gap-4">
+                                <a href="#" className="flex h-12 w-12 items-center justify-center rounded-full bg-stone-950 border border-stone-800 text-stone-400 hover:text-cyan-400 hover:border-cyan-500/50 transition-all hover:scale-110 hover:-translate-y-1 shadow-xl">
+                                  <Instagram size={20} />
+                                </a>
+                                <a href="https://wa.me/919819876103" target="_blank" rel="noreferrer" className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all hover:scale-110 hover:-translate-y-1 shadow-xl">
+                                  <WhatsAppIcon size={20} />
+                                </a>
+                             </div>
+                           </div>
+                        </div>
+
+                        {/* Founder Card */}
+                        <div className="md:col-span-5 border border-stone-800/80 bg-stone-900/60 backdrop-blur-md rounded-3xl p-8 relative overflow-hidden flex flex-col items-center justify-center text-center shadow-xl">
+                          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-cyan-500/10 to-transparent blur-3xl rounded-full" />
+                          <div className="h-20 w-20 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-6 shadow-[0_0_30px_rgba(6,182,212,0.15)] relative z-10">
+                            <User size={40} strokeWidth={1.5} />
+                          </div>
+                          <h3 className="font-serif text-2xl font-bold text-white uppercase relative z-10">Chetan Pansare</h3>
+                          <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-[0.2em] mt-2 block relative z-10">Founder & Managing Advisor</span>
+                          
+                          <div className="mt-8 relative z-10 bg-stone-950/40 border border-stone-800 rounded-2xl p-6">
+                            <p className="text-xs italic text-stone-300 leading-relaxed font-light">
+                              "Mumbai's real estate represents more than cement and steel; it holds architectural heritage and legacy. Our team is dedicated to providing physical title verification and representing luxury listings with absolute fidelity and privacy."
                             </p>
-                            <button
-                              onClick={() => setListingSuccess(false)}
-                              className="mt-6 rounded-full bg-stone-800 border border-stone-700 px-6 py-2.5 text-xs font-mono font-bold text-stone-300 hover:text-white"
-                            >
-                              Submit Another Request
-                            </button>
                           </div>
-                        ) : (
-                          <div>
-                            <div className="mb-6 border-b border-stone-800/80 pb-4">
-                              <span className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">Secure Representation Desk</span>
-                              <h3 className="font-serif text-xl font-bold text-white uppercase mt-1">LIST OR ACQUIRE AN ESTATE</h3>
-                              <p className="text-xs text-stone-400 mt-1">Submit your property parameters directly to our concierge team for VVIP representation.</p>
-                            </div>
+                        </div>
 
-                            <form onSubmit={handleListPropertySubmit} className="space-y-4">
-                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Your Name *</label>
-                                  <input
-                                    type="text"
-                                    required
-                                    placeholder="E.g., Anirudh Sharma"
-                                    value={listName}
-                                    onChange={(e) => setListName(e.target.value)}
-                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Primary Email *</label>
-                                  <input
-                                    type="email"
-                                    required
-                                    placeholder="anirudh@sharmacapital.in"
-                                    value={listEmail}
-                                    onChange={(e) => setListEmail(e.target.value)}
-                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none"
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Contact Phone *</label>
-                                  <input
-                                    type="tel"
-                                    required
-                                    placeholder="+91 98765 43210"
-                                    value={listPhone}
-                                    onChange={(e) => setListPhone(e.target.value)}
-                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none font-mono"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Property Type / Interest</label>
-                                  <select
-                                    value={listPropType}
-                                    onChange={(e) => setListPropType(e.target.value)}
-                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white focus:border-cyan-500/50 focus:outline-none"
-                                  >
-                                    <option value="Acquisition Penthouse">Acquire a Sky Mansion / Penthouse</option>
-                                    <option value="Acquisition Beach Villa">Acquire a Beachside Villa</option>
-                                    <option value="Lease Premium Flat">Lease an Elite South Mumbai Flat</option>
-                                    <option value="Owner Listing Representative">Represent My Home for Sale/Rent</option>
-                                  </select>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Asset Location / Region *</label>
-                                  <input
-                                    type="text"
-                                    required
-                                    placeholder="E.g., Worli Sea Face, Malabar Hill, Powai..."
-                                    value={listSubLocation}
-                                    onChange={(e) => setListSubLocation(e.target.value)}
-                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Target Budget / Valuation *</label>
-                                  <input
-                                    type="text"
-                                    required
-                                    placeholder="E.g., ₹ 25 Crores or ₹ 4 Lakhs/mo"
-                                    value={listPrice}
-                                    onChange={(e) => setListPrice(e.target.value)}
-                                    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none font-mono"
-                                  />
-                                </div>
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1 font-mono">Narrative Brief / Special Instructions</label>
-                                <textarea
-                                  rows={3}
-                                  placeholder="Specify any structural requests, off-market queries, or physical walkthrough dates..."
-                                  value={listDesc}
-                                  onChange={(e) => setListDesc(e.target.value)}
-                                  className="w-full rounded-xl border border-stone-800 bg-stone-950 p-3 text-xs text-white placeholder-stone-700 focus:border-cyan-500/50 focus:outline-none resize-none"
-                                />
-                              </div>
-
-                              <motion.button
-                                whileHover={{ scale: 1.01 }}
-                                whileTap={{ scale: 0.99 }}
-                                disabled={listingSubmitting}
-                                type="submit"
-                                className="w-full rounded-xl bg-cyan-500 py-3 text-xs font-bold uppercase tracking-wider font-mono text-black shadow-lg cursor-pointer"
-                              >
-                                {listingSubmitting ? "Securing channel connection..." : "Connect to Concierge Advisory Desk"}
-                              </motion.button>
-
-                            </form>
-                          </div>
-                        )}
                       </div>
                     </motion.div>
                   )}
@@ -1164,7 +1044,8 @@ export default function App() {
       </main>
 
       {/* FOOTER */}
-      <footer className="relative z-10 border-t border-stone-900 bg-stone-950 py-12 mt-16">
+      {currentTab !== "projects" && (
+        <footer className="relative z-10 border-t border-stone-900 bg-stone-950 py-12 mt-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-b border-stone-900 pb-8 items-start">
@@ -1246,8 +1127,10 @@ export default function App() {
 
         </div>
       </footer>
+      )}
 
       {/* Floating Action Buttons */}
+      {currentTab !== "projects" && (
       <div className="fixed bottom-6 right-6 z-30 flex flex-col gap-3 items-end">
         {/* WhatsApp Floating CTA */}
         <motion.a
@@ -1273,6 +1156,7 @@ export default function App() {
           {isChatOpen ? <X size={22} /> : <MessageSquare size={22} />}
         </motion.button>
       </div>
+      )}
 
       {/* MODALS */}
       <BookingModal 

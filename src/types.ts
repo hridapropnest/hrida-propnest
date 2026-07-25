@@ -13,6 +13,7 @@ export interface Property {
   tagline: string;
   description: string;
   highlights: readonly string[];
+  pdfUrl?: string;
 }
 
 export interface ChatMessage {
