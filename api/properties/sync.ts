@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { readDb, writeDb } from "../storage";
+import { writeDb } from "../storage";
 
 const BROKER_PIN = process.env.BROKER_PIN || "4040";
 
@@ -8,25 +8,20 @@ export default async function handler(
   res: VercelResponse
 ) {
   try {
-    if (req.method === "DELETE") {
+    if (req.method === "POST") {
       const pin = req.headers["x-broker-pin"];
 
       if (pin !== BROKER_PIN) {
         return res.status(401).json({ success: false, error: "Unauthorized" });
       }
 
-      const { id } = req.query;
-      let properties = readDb("properties.json");
-      
-      const initialLength = properties.length;
-      properties = properties.filter((p: any) => p.id !== id);
-      
-      if (properties.length === initialLength) {
-        return res.status(404).json({ success: false, error: "Property not found" });
+      const { properties } = req.body;
+      if (!properties || !Array.isArray(properties)) {
+        return res.status(400).json({ success: false, error: "Invalid properties array" });
       }
 
       writeDb("properties.json", properties);
-      return res.status(200).json({ success: true, message: "Deleted successfully" });
+      return res.status(200).json({ success: true, count: properties.length });
     }
 
     return res.status(405).json({ success: false, error: "Method Not Allowed" });

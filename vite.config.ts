@@ -23,8 +23,9 @@ export default defineConfig(() => {
       // Proxy /api/* to local Express server for local dev (mirrors Vercel serverless in prod)
       proxy: {
         '/api': {
-          target: 'http://localhost:3001',
+          target: 'https://hridapropnest.com',
           changeOrigin: true,
+          secure: false,
         },
       },
     },

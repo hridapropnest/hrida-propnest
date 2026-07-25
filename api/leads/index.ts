@@ -1,70 +1,35 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { db } from "../firebaseAdmin";
 import { randomUUID } from "crypto";
+import { readDb, writeDb } from "../storage";
 
-const BROKER_PIN = process.env.BROKER_PIN!;
+const BROKER_PIN = process.env.BROKER_PIN || "4040";
 
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
   try {
-
-    // ============================
-    // GET ALL LEADS (ADMIN)
-    // ============================
     if (req.method === "GET") {
-
       const pin = req.headers["x-broker-pin"];
 
       if (pin !== BROKER_PIN) {
-        return res.status(401).json({
-          success: false,
-          error: "Unauthorized",
-        });
+        return res.status(401).json({ success: false, error: "Unauthorized" });
       }
 
-      const snapshot = await db
-        .collection("leads")
-        .orderBy("createdAt", "desc")
-        .get();
+      const leads = readDb("leads.json").reverse();
 
-      const leads = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      return res.status(200).json({
-        success: true,
-        leads,
-      });
+      return res.status(200).json({ success: true, leads });
     }
 
-    // ============================
-    // CREATE LEAD
-    // ============================
     if (req.method === "POST") {
-
-      const {
-        name,
-        email,
-        phone,
-        budget,
-        propertyInterest,
-        message,
-      } = req.body;
+      const { name, email, phone, budget, propertyInterest, message } = req.body;
 
       if (!name || !email) {
-        return res.status(400).json({
-          success: false,
-          error: "Name and Email are required.",
-        });
+        return res.status(400).json({ success: false, error: "Name and Email are required." });
       }
 
-      const id = randomUUID();
-
       const lead = {
-        id,
+        id: randomUUID(),
         name,
         email,
         phone: phone || "",
@@ -74,27 +39,17 @@ export default async function handler(
         createdAt: Date.now(),
       };
 
-      await db.collection("leads").doc(id).set(lead);
+      const leads = readDb("leads.json");
+      leads.push(lead);
+      writeDb("leads.json", leads);
 
-      return res.status(200).json({
-        success: true,
-        lead,
-      });
+      return res.status(200).json({ success: true, lead });
     }
 
-    return res.status(405).json({
-      success: false,
-      error: "Method Not Allowed",
-    });
+    return res.status(405).json({ success: false, error: "Method Not Allowed" });
 
   } catch (err: any) {
-
     console.error(err);
-
-    return res.status(500).json({
-      success: false,
-      error: err.message,
-    });
-
+    return res.status(500).json({ success: false, error: err.message });
   }
 }
