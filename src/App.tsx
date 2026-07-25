@@ -123,27 +123,34 @@ export default function App() {
     return DEFAULT_PROPERTIES;
   });
 
-  // Fetch properties from server on mount
+  // Fetch properties from server in real-time
   useEffect(() => {
-    const fetchProps = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "properties"));
-        const fbProps: Property[] = [];
-        querySnapshot.forEach((doc) => {
-          fbProps.push({ id: doc.id, ...doc.data() } as Property);
-        });
+    import("firebase/firestore").then(({ onSnapshot, collection }) => {
+      const unsubscribe = onSnapshot(
+        collection(db, "properties"),
+        (snapshot) => {
+          const fbProps: Property[] = [];
+          snapshot.forEach((doc) => {
+            fbProps.push({ id: doc.id, ...doc.data() } as Property);
+          });
 
-        if (fbProps.length > 0) {
-          setProperties(fbProps);
-          localStorage.setItem("hrida_properties", JSON.stringify(fbProps));
-          return;
+          if (fbProps.length > 0) {
+            setProperties(fbProps);
+            localStorage.setItem("hrida_properties", JSON.stringify(fbProps));
+          } else {
+            setProperties(DEFAULT_PROPERTIES);
+          }
+        },
+        (err) => {
+          console.error("Failed to fetch properties from Firebase in real-time:", err);
+          setProperties((prev) => (prev.length === 0 ? DEFAULT_PROPERTIES : prev));
         }
-      } catch (err) {
-        console.error("Failed to fetch properties from Firebase, using local data source fallback:", err);
-        setProperties(prev => prev.length === 0 ? DEFAULT_PROPERTIES : prev);
-      }
-    };
-    fetchProps();
+      );
+
+      return () => unsubscribe();
+    }).catch(err => {
+        console.error("Failed to import firestore:", err);
+    });
   }, []);
 
   // Save properties to local storage and sync to server when updated locally
