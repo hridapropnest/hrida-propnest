@@ -354,8 +354,7 @@ setShowAreaDropdown(false);
 
     try {
       const batch = writeBatch(db);
-      const propsToSeed = properties.length > 0 ? properties : DEFAULT_PROPERTIES;
-      propsToSeed.forEach(prop => {
+      properties.forEach(prop => {
         const docRef = doc(db, "properties", prop.id);
         batch.set(docRef, prop);
       });
@@ -363,6 +362,24 @@ setShowAreaDropdown(false);
       toast.success("Properties successfully synchronized to the live cloud database.");
     } catch (e) {
       console.warn("Firebase Sync failed.", e);
+      toast.error("Cloud synchronization failed. Are security rules updated?");
+    }
+  };
+
+  const handleSeedDefaults = async () => {
+    const confirmSeed = window.confirm("Seed the live cloud database with the default template listings?");
+    if (!confirmSeed) return;
+
+    try {
+      const batch = writeBatch(db);
+      DEFAULT_PROPERTIES.forEach(prop => {
+        const docRef = doc(db, "properties", prop.id);
+        batch.set(docRef, prop);
+      });
+      await batch.commit();
+      toast.success("Sample properties successfully seeded to the live cloud database.");
+    } catch (e) {
+      console.warn("Firebase Seed failed.", e);
       toast.error("Cloud synchronization failed. Are security rules updated?");
     }
   };
@@ -667,7 +684,7 @@ setShowAreaDropdown(false);
                     </div>
                     <button
                       id="seed-defaults-btn"
-                      onClick={handleSyncToCloud}
+                      onClick={handleSeedDefaults}
                       className="rounded-lg bg-stone-900 border border-stone-700 hover:border-teal-400 px-3.5 py-1.5 text-xs font-bold text-teal-400 hover:text-white transition-all cursor-pointer font-mono uppercase"
                     >
                       🌱 Seed Sample Listings
