@@ -660,13 +660,13 @@ setShowAreaDropdown(false);
                     <div className="flex items-start gap-2.5">
                       <Info size={16} className="text-teal-400 shrink-0 mt-0.5" />
                       <div>
-                        <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Boutique Listing Management</h4>
-                        <p className="text-[11px] text-stone-400 mt-0.5">Add custom listings with direct image support or reload the 6 template Indian residences into local memory.</p>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Firebase Listing Management</h4>
+                        <p className="text-[11px] text-stone-400 mt-0.5">Add custom listings with direct image support or seed the 6 template Indian residences directly to Firebase.</p>
                       </div>
                     </div>
                     <button
                       id="seed-defaults-btn"
-                      onClick={handleSeedDefaults}
+                      onClick={handleSyncToCloud}
                       className="rounded-lg bg-stone-900 border border-stone-700 hover:border-teal-400 px-3.5 py-1.5 text-xs font-bold text-teal-400 hover:text-white transition-all cursor-pointer font-mono uppercase"
                     >
                       🌱 Seed Sample Listings
