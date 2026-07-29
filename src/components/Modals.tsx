@@ -431,14 +431,14 @@ export function CallModal({ isOpen, onClose, onLeadCaptured }: CallModalProps) {
                   <div>
                     <span className="text-[10px] text-stone-500 uppercase tracking-widest font-mono block">Or Dial Directly</span>
                     <p className="mt-1 font-display text-base sm:text-lg font-bold text-white font-mono hover:text-cyan-400 transition-colors">
-                      <a id="hotline-phone-link" href="tel:+919819876103">+91 98198 76103</a>
+                      <a id="hotline-phone-link" href="tel:+918928493702">+91 89284 93702</a>
                     </p>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] text-stone-500 uppercase tracking-widest font-mono block">WhatsApp Desk</span>
                     <p className="mt-1">
                       <a 
-                        href="https://wa.me/919819876103" 
+                        href="https://wa.me/918928493702" 
                         target="_blank" 
                         rel="noreferrer" 
                         className="inline-flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-mono font-bold transition-colors"

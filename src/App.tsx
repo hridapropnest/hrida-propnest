@@ -764,13 +764,13 @@ export default function App() {
                       {/* Hero Section */}
                       <div className="text-center space-y-4 mb-16">
                         <span className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">
-                          Mumbai's Elite Real Estate Boutique
+                          Built by Mumbaikars, for Mumbaikars
                         </span>
-                        <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.1] uppercase max-w-3xl mx-auto drop-shadow-2xl">
-                          Discretion. Heritage. Advisory.
-                        </h2>
+                        <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.1] uppercase max-w-3xl mx-auto drop-shadow-2xl">
+                          Your Dream Home in Mumbai — We Find It.
+                        </h1>
                         <p className="text-sm sm:text-base text-stone-400 leading-relaxed font-light max-w-2xl mx-auto mt-6">
-                          Founded on the principles of absolute client discretion and deep structural evaluation, Hrida Propnest represents the pinnacle of residential advisory in Mumbai.
+                          Whether you're looking for a luxury flat in Worli, a sea-view penthouse in Bandra West, or a premium apartment in Thane and Navi Mumbai — Hrida Propnest is the team that actually knows Mumbai's neighbourhoods, its builders, and its people.
                         </p>
                       </div>
 
@@ -783,19 +783,19 @@ export default function App() {
                              <Sparkles className="text-cyan-400" size={24} /> Our Vision
                            </h3>
                            <p className="relative z-10 text-stone-300 leading-relaxed font-light text-sm">
-                             To be the definitive authority and most trusted enclave for ultra-luxury real estate transactions across South Mumbai, offering an unparalleled level of access and exclusive curation that traditional brokerages simply cannot match. We envision a future where elite property acquisition is completely seamless, private, and breathtakingly bespoke.
-                           </p>
+                              We know how overwhelming it can feel to find the right home in a city like Mumbai. There are thousands of listings, dozens of brokers, and endless confusion. We started Hrida Propnest with one simple belief — that every family deserves a broker who is honest, thorough, and genuinely on <em>their</em> side. From South Mumbai to Thane, we curate only the properties we believe in, so you never waste a single weekend viewing.
+                            </p>
                         </div>
 
                         {/* Mission Card */}
                         <div className="relative overflow-hidden bg-stone-900/60 border border-stone-800 backdrop-blur-md rounded-3xl p-10 shadow-2xl group hover:border-cyan-500/30 transition-all duration-500">
                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full group-hover:bg-emerald-500/20 transition-all duration-500" />
                            <h3 className="relative z-10 font-display text-2xl font-bold text-white uppercase tracking-wider mb-6 flex items-center gap-3">
-                             <Building className="text-emerald-400" size={24} /> Our Mission
+                             <Building className="text-emerald-400" size={24} /> How We Help You
                            </h3>
                            <p className="relative z-10 text-stone-300 leading-relaxed font-light text-sm">
-                             To rigorously protect our clients' interests by conducting comprehensive physical title verifications, providing elite structural narrative evaluations, and maintaining a strictly RERA-compliant portfolio. We are on a mission to represent only the highest echelon of architectural marvels and deliver them with absolute fidelity and zero friction.
-                           </p>
+                              We verify every property title in person, check RERA compliance, and walk the site ourselves before we ever show it to you. No recycled MagicBricks listings, no hidden commissions, no surprises. Just clean, verified, premium properties for sale and rent across Mumbai — and a team that picks up the phone.
+                            </p>
                         </div>
                       </div>
 
@@ -809,13 +809,13 @@ export default function App() {
                              <h3 className="font-serif text-3xl font-bold text-white uppercase mb-8">Connect With Us</h3>
                              
                              <div className="space-y-6">
-                               <a href="tel:+919819876103" className="group flex items-center gap-5 p-4 rounded-2xl bg-stone-950/50 border border-stone-800 hover:border-cyan-500/40 transition-all">
+                               <a href="tel:+918928493702" className="group flex items-center gap-5 p-4 rounded-2xl bg-stone-950/50 border border-stone-800 hover:border-cyan-500/40 transition-all">
                                  <div className="w-12 h-12 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform">
                                    <Phone size={20} />
                                  </div>
                                  <div>
                                    <div className="text-[10px] font-mono text-stone-500 uppercase tracking-widest mb-1">Direct Hotline</div>
-                                   <div className="text-white font-mono text-lg font-bold tracking-wider">+91 98198 76103</div>
+                                   <div className="text-white font-mono text-lg font-bold tracking-wider">+91 89284 93702</div>
                                  </div>
                                </a>
                                
@@ -837,7 +837,7 @@ export default function App() {
                                 <a href="#" className="flex h-12 w-12 items-center justify-center rounded-full bg-stone-950 border border-stone-800 text-stone-400 hover:text-cyan-400 hover:border-cyan-500/50 transition-all hover:scale-110 hover:-translate-y-1 shadow-xl">
                                   <Instagram size={20} />
                                 </a>
-                                <a href="https://wa.me/919819876103" target="_blank" rel="noreferrer" className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all hover:scale-110 hover:-translate-y-1 shadow-xl">
+                                <a href="https://wa.me/918928493702" target="_blank" rel="noreferrer" className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all hover:scale-110 hover:-translate-y-1 shadow-xl">
                                   <WhatsAppIcon size={20} />
                                 </a>
                              </div>
@@ -855,7 +855,7 @@ export default function App() {
                           
                           <div className="mt-8 relative z-10 bg-stone-950/40 border border-stone-800 rounded-2xl p-6">
                             <p className="text-xs italic text-stone-300 leading-relaxed font-light">
-                              "Mumbai's real estate represents more than cement and steel; it holds architectural heritage and legacy. Our team is dedicated to providing physical title verification and representing luxury listings with absolute fidelity and privacy."
+                              "I grew up watching Mumbai grow — Worli Sea Face change, Bandra's skyline rise, Thane become a city of its own. This platform is my way of making sure the people who live and breathe this city can find their place in it — with full trust, zero stress."
                             </p>
                           </div>
                         </div>
@@ -1066,20 +1066,20 @@ export default function App() {
               <span className="text-[10px] text-stone-500 uppercase tracking-widest font-mono font-bold block">Contact Details</span>
               <div className="flex flex-col items-start md:items-center space-y-2">
                 <a 
-                  href="tel:+919819876103" 
+                  href="tel:+918928493702" 
                   className="inline-flex items-center gap-2 text-xs text-stone-300 hover:text-cyan-400 transition-colors font-mono"
                 >
                   <Phone size={12} className="text-cyan-400" />
-                  <span>+91 98198 76103</span>
+                  <span>+91 89284 93702</span>
                 </a>
                 <a 
-                  href="https://wa.me/919819876103" 
+                  href="https://wa.me/918928493702" 
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 text-xs text-stone-300 hover:text-emerald-400 transition-colors font-mono font-bold"
                 >
                   <WhatsAppIcon size={12} className="text-emerald-400" />
-                  <span>WhatsApp: +91 98198 76103</span>
+                  <span>WhatsApp: +91 89284 93702</span>
                 </a>
                 <a 
                   href="mailto:hridapropnest@gmail.com" 
@@ -1096,7 +1096,7 @@ export default function App() {
               <span className="text-[10px] text-stone-500 uppercase tracking-widest font-mono font-bold block">Follow Our Collection</span>
               <div className="flex items-center md:justify-end gap-3">
                 <a 
-                  href="https://wa.me/919819876103" 
+                  href="https://wa.me/918928493702" 
                   target="_blank" 
                   rel="noreferrer" 
                   className="h-8 w-8 rounded-full border border-stone-800 bg-stone-900 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-600 hover:border-emerald-500 transition-all duration-300"
@@ -1132,7 +1132,7 @@ export default function App() {
       <div className="fixed bottom-6 right-6 z-30 flex flex-col gap-3 items-end">
         {/* WhatsApp Floating CTA */}
         <motion.a
-          href="https://wa.me/919819876103"
+          href="https://wa.me/918928493702"
           target="_blank"
           rel="noreferrer"
           whileHover={{ scale: 1.05 }}
