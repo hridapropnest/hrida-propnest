@@ -15,18 +15,20 @@ interface AIChatProps {
 }
 
 const CONVERSATION_CHIPS = [
-  { label: "Lodha Altamount 👑", text: "What makes the Lodha Altamount penthouse in Mumbai so unique?" },
-  { label: "Book a private showing 🔑", text: "I would like to book a private VIP tour for one of the villas." },
-  { label: "Thane vs Navi Mumbai 🌇", text: "How does Hiranandani in Thane compare with Palm Beach Road in Navi Mumbai?" },
-  { label: "Broker commissions 💼", text: "What is your standard luxury commission rate and broker representation fee?" },
+  { label: "Buy in Worli / Bandra 🏙️", text: "I'm looking to buy a luxury flat in Worli or Bandra West. What's available?" },
+  { label: "Rent in Thane 🏡", text: "I need a premium 3 or 4 BHK on rent in Thane. What areas do you recommend?" },
+  { label: "RERA & title check ✅", text: "How does Hrida Propnest verify properties before listing them?" },
+  { label: "Talk to Chetan 📞", text: "I'd like to speak directly with someone from the Hrida Propnest team." },
 ];
 
 const INITIAL_MESSAGE: ChatMessage = {
   id: "initial",
   role: "model",
-  text: `Namaste! I am Elena, your elite real estate AI concierge. I specialize in Mumbai, Thane, and Navi Mumbai's most prestigious luxury properties.
+  text: `Namaste! I'm Elena, Hrida Propnest's property concierge 🙏
 
-Are you looking for an elite sky-mansion at Lodha Altamount in Mumbai, a grand neoclassical penthouse in Hiranandani Thane, or a futuristic creek-front sky-villa in Navi Mumbai? Tell me your budget or desired lifestyle!`,
+Whether you're buying a luxury flat in Worli, renting a sea-view apartment in Bandra West, or exploring Thane and Navi Mumbai — our team personally visits and verifies every property before showing it to you.
+
+What are you looking for? Tell me your city, budget, and whether it's for buy or rent — and I'll help you find the right fit! 🏡`,
   timestamp: new Date().toISOString(),
 };
 
@@ -86,7 +88,7 @@ const data = await response.json();
       const aiMessage: ChatMessage = {
         id: window.crypto.randomUUID(),
         role: "model",
-        text: data.text || "I apologize, but my connection failed. Please contact our main desk directly at +1 (202) 112-2333.",
+        text: data.text || "I apologize, but my connection failed. Please reach our team directly at +91 89284 93702 or WhatsApp us at wa.me/918928493702.",
         timestamp: new Date().toISOString(),
       };
 
@@ -255,7 +257,7 @@ const data = await response.json();
         handleSendMessage(inputValue);
     }
 }}
-                placeholder="Ask Elena about Mumbai, Thane, Navi Mumbai or elite properties..."
+                placeholder="Ask about buying, renting, Worli, Bandra, Thane, Navi Mumbai..."
                 className="flex-1 py-2.5 px-2 text-xs text-white placeholder-stone-600 focus:outline-none bg-transparent"
               />
               <button
