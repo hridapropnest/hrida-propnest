@@ -330,8 +330,8 @@ export default function App() {
       {/* HEADER SECTION */}
       {currentTab !== "projects" && (
         <>
-        <header className="relative z-40 mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between border-b border-stone-800/60 pb-4 bg-stone-950/40 backdrop-blur-md rounded-b-xl px-4">
+        <header className="absolute top-0 left-0 right-0 z-40 mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between pb-4 bg-transparent px-4">
           
           {/* Logo Brand */}
           <div className="flex items-center gap-2.5 cursor-pointer select-none" onClick={() => { setIsDetailView(false); setCurrentTab("home"); handleLogoClick(); }}>
@@ -759,7 +759,7 @@ export default function App() {
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="space-y-12 max-w-5xl mx-auto py-8"
+                      className="space-y-12 max-w-5xl mx-auto pt-24 pb-8"
                     >
                       {/* Hero Section */}
                       <div className="text-center space-y-4 mb-16">
@@ -875,7 +875,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.4 }}
-              className="relative py-4"
+              className="relative pt-24 pb-4"
             >
               
               <button
