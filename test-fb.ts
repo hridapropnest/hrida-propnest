@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, setDoc, doc } from "firebase/firestore";
+import { getFirestore, doc, setDoc, deleteDoc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAgc8fqxwPVewdrnxKVaQOSF4FW9xsxM-k",
@@ -14,15 +14,24 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function test() {
+async function runTest() {
+  const testId = "test-doc-" + Date.now();
   try {
-    const snap = await getDocs(collection(db, "properties"));
-    console.log("Read success, docs:", snap.size);
-    const testId = "test-" + Date.now();
+    console.log("1. Writing test document:", testId);
     await setDoc(doc(db, "properties", testId), { test: true });
-    console.log("Write success for", testId);
-  } catch (e) {
-    console.error("Firebase Error:", e.message);
+    console.log("Write SUCCESS");
+  } catch (e: any) {
+    console.error("Write FAILED:", e.message);
+    return;
+  }
+
+  try {
+    console.log("2. Deleting test document:", testId);
+    await deleteDoc(doc(db, "properties", testId));
+    console.log("Delete SUCCESS");
+  } catch (e: any) {
+    console.error("Delete FAILED:", e.message);
   }
 }
-test();
+
+runTest();

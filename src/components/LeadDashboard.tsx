@@ -211,12 +211,12 @@ export function LeadDashboard({
   // Image File Handling (Click & Drag-and-Drop)
   const processImageFile = (file: File) => {
     if (!file.type.startsWith("image/")) {
-      toast.success("Please upload a valid image file.");
+      toast.error("Please upload a valid image file.");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.success("Maximum image size is 5MB.");
+      toast.error("Maximum image size is 5MB.");
       return;
     }
 
@@ -226,9 +226,9 @@ export function LeadDashboard({
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 800;
+          const MAX_WIDTH = 1920;
           const scale = MAX_WIDTH / img.width;
-          
+
           if (img.width > MAX_WIDTH) {
             canvas.width = MAX_WIDTH;
             canvas.height = img.height * scale;
@@ -236,12 +236,12 @@ export function LeadDashboard({
             canvas.width = img.width;
             canvas.height = img.height;
           }
-          
+
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            // Compress to JPEG with 0.7 quality
-            const compressed = canvas.toDataURL("image/jpeg", 0.7);
+            // High-quality JPEG — luxury real estate images must be crisp
+            const compressed = canvas.toDataURL("image/jpeg", 0.97);
             setPropImage(compressed);
           }
         };
@@ -250,6 +250,7 @@ export function LeadDashboard({
     };
     reader.readAsDataURL(file);
   };
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -292,9 +293,15 @@ export function LeadDashboard({
   const handleAddPropertySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!propName || !area || !city || !propPdfUrl) {
-  toast.error("Brochure Name, Area, City and PDF Link are required.");
-  return;
-}
+      toast.error("Project Name, Area, City and PDF Link are required.");
+      return;
+    }
+
+    setSavingProperty(true);
+
+    const highlightsArray = propHighlights
+      ? propHighlights.split(",").map(h => h.trim()).filter(Boolean)
+      : ["Downloadable PDF", "Floor Plans", "Master Plan"];
 
     const newPropertyObj: Property = {
       id: Math.random().toString(36).substring(2, 9),
@@ -309,40 +316,31 @@ export function LeadDashboard({
       image: propImage || IMAGE_PRESETS[0].url,
       tagline: "Exclusive Project Brochure",
       description: propDescription || "Official luxury brochure containing floor plans, amenities, and project vision.",
-      highlights: ["Downloadable PDF", "Floor Plans", "Master Plan"],
+      highlights: [],
       pdfUrl: propPdfUrl,
     };
 
-    // Update frontend state
-    const updatedProperties = [...properties, newPropertyObj];
-    onPropertiesUpdate(updatedProperties);
-setSavingProperty(true);
-    // Call server to add it as well
+    // Write to Firebase first — onSnapshot will update the UI automatically
     try {
-      const res = await fetch("http://localhost:3001/api/properties", {
+      await setDoc(doc(db, "properties", newPropertyObj.id), newPropertyObj);
+      toast.success("Property added to portfolio successfully!");
+
+      // Also save to local API server (fire-and-forget)
+      fetch("http://localhost:3001/api/properties", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-broker-pin": "4040" },
         body: JSON.stringify(newPropertyObj),
-      });
-      
-      // Auto-sync to Firebase
-      try {
-        await setDoc(doc(db, "properties", newPropertyObj.id), newPropertyObj);
-      } catch (fbErr) {
-        console.warn("Firebase auto-sync failed:", fbErr);
-      }
+      }).catch(() => console.warn("Local API save failed (non-critical)."));
 
-      if (res.ok) {
-        toast.success("Property added and synced to cloud successfully");
-      } else {
-        toast.error("Failed to add property to server.");
-      }
-    } catch (err) {
-      console.warn("API connection failed, property saved to local browser cache.");
+    } catch (err: any) {
+      console.error("Firebase write failed:", err);
+      // Fallback: update local state only
+      onPropertiesUpdate([...properties, newPropertyObj]);
+      toast.error(`Save failed: ${err?.message || "Please try again."}`);
+    } finally {
+      setSavingProperty(false);
     }
-finally {
-  setSavingProperty(false);
-}
+
     // Success banner & Reset
     setFormSuccess(true);
     window.setTimeout(() => {
@@ -372,28 +370,29 @@ setShowAreaDropdown(false);
     const confirmDelete = window.confirm("Are you sure you want to permanently withdraw this boutique residence from the portfolio?");
     if (!confirmDelete) return;
 
-    // Filter out
-    const updated = properties.filter((p) => p.id !== id);
-    onPropertiesUpdate(updated);
+    // Store the original properties list for rollback
+    const originalProperties = [...properties];
 
-    // Call server to delete
     try {
-      const res = await fetch(`http://localhost:3001/api/properties/${id}`, {
+      // Optimistically update the UI immediately
+      const updated = properties.filter((p) => p.id !== id);
+      onPropertiesUpdate(updated);
+
+      // Delete from Firebase
+      await deleteDoc(doc(db, "properties", id));
+      toast.success("Property withdrawn from portfolio successfully.");
+
+      // Also remove from local API server (fire-and-forget, non-critical)
+      fetch(`http://localhost:3001/api/properties/${id}`, {
         method: "DELETE",
         headers: { "x-broker-pin": "4040" },
-      });
-      
-      // Auto-sync delete to Firebase
-      try {
-        await deleteDoc(doc(db, "properties", id));
-      } catch (fbErr) {
-        console.warn("Firebase auto-sync delete failed:", fbErr);
-      }
+      }).catch(() => console.warn("Local API delete failed (non-critical)."));
 
-      if (!res.ok) throw new Error("API delete failed");
-      toast.success("Brochure deleted and synced to cloud successfully");
-    } catch (err) {
-      console.warn("API connection failed, property deleted locally.");
+    } catch (err: any) {
+      console.error("Firebase delete failed:", err);
+      // Rollback to original properties if Firebase delete fails
+      onPropertiesUpdate(originalProperties);
+      toast.error(`Delete failed: ${err?.message || "Please try again."}`);
     }
   };
 
@@ -770,7 +769,7 @@ setShowAreaDropdown(false);
                                   {property.purpose === "buy" ? "Buy" : "Rent"}
                                 </span>
                                 <span className="text-[9px] text-cyan-400 font-mono font-bold">
-                                  {property.beds} BHK • {property.sqft.toLocaleString()} SqFt
+                                  {property.beds ? `${property.beds} BHK` : 'Brochure'} {property.sqft ? `• ${property.sqft.toLocaleString()} SqFt` : ''}
                                 </span>
                               </div>
                               <h4 className="font-display font-bold text-white text-xs sm:text-sm truncate mt-0.5">{property.name}</h4>
@@ -803,106 +802,61 @@ setShowAreaDropdown(false);
 
                     <form onSubmit={handleAddPropertySubmit} className="space-y-5">
                       
-                      {/* Name & Location */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Project Name *</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="E.g., RAHEJA ARTESIA DUPLEX"
-                            value={propName}
-                            onChange={(e) => setPropName(e.target.value)}
-                            className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none"
-                          />
-                        </div>
-
-                        <div>
-                          <div className="grid grid-cols-2 gap-4">
-
-  <div>
-    <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">
-      City
-    </label>
-
-    <select
-      value={city}
-      onChange={(e) => {
-        setCity(e.target.value);
-        setArea("");
-      }}
-      className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white"
-    >
-      <option>Mumbai</option>
-      <option>Thane</option>
-      <option>Navi Mumbai</option>
-    </select>
-  </div>
-
-  <div>
-    <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">
-      Area
-    </label>
-
-    <div
-  className="relative"
-  onClick={(e) => e.stopPropagation()}
->
-  <input
-    type="text"
-    value={area}
-    placeholder="Search Area..."
-    onChange={(e) => {
-      setArea(e.target.value);
-      setShowAreaDropdown(true);
-    }}
-    onFocus={() => setShowAreaDropdown(true)}
-    className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-600"
-  />
-
-  {showAreaDropdown && (
-    <div className="absolute left-0 right-0 mt-1 max-h-56 overflow-y-auto rounded-xl border border-stone-800 bg-stone-950 shadow-xl z-50">
-
-      {AREAS[city]
-        .filter((item) =>
-          item.toLowerCase().includes(area.toLowerCase())
-        )
-        .map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => {
-              setArea(item);
-              setShowAreaDropdown(false);
-            }}
-            className="block w-full text-left px-4 py-2 text-xs text-stone-300 hover:bg-stone-800 hover:text-cyan-400"
-          >
-            {item}
-          </button>
-        ))}
-
-    </div>
-  )}
-</div>
-  </div>
-
-</div>
-                        </div>
-                      </div>
-
-                      {/* Narrative Description */}
+                      {/* Project Name */}
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Description (Shown on Detail View)</label>
-                        <textarea
-                          rows={3}
-                          placeholder="E.g., Designed for discerning connoisseurs, this triplex penthouse blends classical architecture..."
-                          value={propDescription}
-                          onChange={(e) => setPropDescription(e.target.value)}
-                          className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none resize-none"
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Project Name *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="E.g., RAHEJA ARTESIA DUPLEX"
+                          value={propName}
+                          onChange={(e) => setPropName(e.target.value)}
+                          className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none"
                         />
                       </div>
+                      {/* City & Area */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">City *</label>
+                          <select
+                            value={city}
+                            onChange={(e) => { setCity(e.target.value); setArea(""); }}
+                            className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white focus:border-teal-500 focus:outline-none"
+                          >
+                            <option>Mumbai</option>
+                            <option>Thane</option>
+                            <option>Navi Mumbai</option>
+                          </select>
+                        </div>
+                        <div className="relative" onClick={(e) => e.stopPropagation()}>
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Area *</label>
+                          <input
+                            type="text"
+                            value={area}
+                            placeholder="Search area..."
+                            onChange={(e) => { setArea(e.target.value); setShowAreaDropdown(true); }}
+                            onFocus={() => setShowAreaDropdown(true)}
+                            className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-600 focus:border-teal-500 focus:outline-none"
+                          />
+                          {showAreaDropdown && (
+                            <div className="absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl border border-stone-800 bg-stone-950 shadow-xl z-50">
+                              {AREAS[city]
+                                .filter(item => item.toLowerCase().includes(area.toLowerCase()))
+                                .map(item => (
+                                  <button
+                                    key={item}
+                                    type="button"
+                                    onClick={() => { setArea(item); setShowAreaDropdown(false); }}
+                                    className="block w-full text-left px-4 py-2 text-xs text-stone-300 hover:bg-stone-800 hover:text-cyan-400"
+                                  >
+                                    {item}
+                                  </button>
+                                ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
-                      {/* PDF Brochure URL */}
                       <div>
                         <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Brochure PDF Link *</label>
                         <input
@@ -912,6 +866,18 @@ setShowAreaDropdown(false);
                           value={propPdfUrl}
                           onChange={(e) => setPropPdfUrl(e.target.value)}
                           className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Description */}
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 font-mono">Description</label>
+                        <textarea
+                          rows={3}
+                          placeholder="E.g., Designed for discerning connoisseurs, this triplex penthouse blends classical architecture..."
+                          value={propDescription}
+                          onChange={(e) => setPropDescription(e.target.value)}
+                          className="w-full rounded-xl border border-stone-800 bg-stone-950 py-2.5 px-4 text-xs text-white placeholder-stone-700 focus:border-teal-500 focus:outline-none resize-none"
                         />
                       </div>
 

@@ -70,7 +70,7 @@ const cleanNotes = notes.trim();
           setPropertyId(properties[0]?.id || "");
         }, 3000);
       } else {
-        setError(data.error || "Failed to submit. Please try again.");
+        setError("Failed to submit. Please try again.");
       }
     } catch (err) {
       setError("Network error. Please try again.");

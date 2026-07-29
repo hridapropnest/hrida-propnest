@@ -29,7 +29,7 @@ import { PROPERTIES, DEFAULT_PROPERTIES } from "./propertiesData";
 import { Property } from "./types";
 import { BookingModal, CallModal } from "./components/Modals";
 import { AIChat } from "./components/AIChat";
-import ContactPage from "./components/ContactPage";
+// ContactPage removed – About Us section is inline
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebase";
 import { LeadDashboard } from "./components/LeadDashboard";
@@ -131,7 +131,24 @@ export default function App() {
           (snapshot) => {
             const fbProps: Property[] = [];
             snapshot.forEach((doc) => {
-              fbProps.push({ id: doc.id, ...doc.data() } as Property);
+              const data = doc.data();
+              fbProps.push({
+                id: doc.id,
+                name: data.name || '',
+                priceText: data.priceText || 'Price on Request',
+                priceNumerical: Number(data.priceNumerical) || 0,
+                purpose: data.purpose === 'rent' ? 'rent' : 'buy',
+                featured: data.featured || false,
+                sqft: Number(data.sqft) || 0,
+                beds: Number(data.beds) || 0,
+                baths: Number(data.baths) || 0,
+                location: data.location || '',
+                image: data.image || '',
+                tagline: data.tagline || '',
+                description: data.description || '',
+                highlights: Array.isArray(data.highlights) ? data.highlights : [],
+                pdfUrl: data.pdfUrl || '',
+              } as Property);
             });
 
             // Firebase is the single source of truth.
@@ -338,7 +355,7 @@ export default function App() {
             <button 
               id="tab-projects-nav"
               onClick={() => { setCurrentTab("projects"); setIsDetailView(false); }}
-              className={`px-5 py-2 rounded-full text-xs font-display font-bold uppercase tracking-wider transition-all ${currentTab === "projects" && !isDetailView ? 'bg-cyan-500 text-black shadow font-bold' : 'text-stone-400 hover:text-white'}`}
+              className={`px-5 py-2 rounded-full text-xs font-display font-bold uppercase tracking-wider transition-all ${(currentTab as string) === "projects" && !isDetailView ? 'bg-cyan-500 text-black shadow font-bold' : 'text-stone-400 hover:text-white'}`}
             >
               Projects
             </button>
@@ -397,7 +414,7 @@ export default function App() {
               </button>
               <button 
                 onClick={() => { setCurrentTab("projects"); setIsDetailView(false); setIsMobileMenuOpen(false); }}
-                className={`text-left py-2 text-xs font-display font-semibold uppercase tracking-wider ${currentTab === "projects" ? "text-cyan-400" : "text-stone-300"}`}
+                className={`text-left py-2 text-xs font-display font-semibold uppercase tracking-wider ${(currentTab as string) === "projects" ? "text-cyan-400" : "text-stone-300"}`}
               >
                 Projects
               </button>
@@ -953,15 +970,15 @@ export default function App() {
                       <div className="grid grid-cols-3 gap-2 my-5 border-y border-stone-800/80 py-3 text-center">
                         <div>
                           <span className="text-[10px] text-stone-500 uppercase tracking-widest font-mono block">Layout</span>
-                          <p className="mt-0.5 font-display font-bold text-white text-sm sm:text-base font-mono">{selectedProperty?.beds} BHK</p>
+                          <p className="mt-0.5 font-display font-bold text-white text-sm sm:text-base font-mono">{selectedProperty?.beds ? `${selectedProperty.beds} BHK` : '—'}</p>
                         </div>
                         <div>
                           <span className="text-[10px] text-stone-500 uppercase tracking-widest font-mono block">Baths</span>
-                          <p className="mt-0.5 font-display font-bold text-white text-sm sm:text-base font-mono">{selectedProperty?.baths}</p>
+                          <p className="mt-0.5 font-display font-bold text-white text-sm sm:text-base font-mono">{selectedProperty?.baths || '—'}</p>
                         </div>
                         <div>
-                          <span className="text-[10px] text-stone-500 uppercase tracking-widest font-mono block">Metro Rank</span>
-                          <p className="mt-0.5 font-display font-bold text-emerald-400 text-sm sm:text-base font-mono">Grade-A</p>
+                          <span className="text-[10px] text-stone-500 uppercase tracking-widest font-mono block">{selectedProperty?.sqft ? 'Area' : 'Metro Rank'}</span>
+                          <p className="mt-0.5 font-display font-bold text-emerald-400 text-sm sm:text-base font-mono">{selectedProperty?.sqft ? `${selectedProperty.sqft.toLocaleString()} sqft` : 'Grade-A'}</p>
                         </div>
                       </div>
 
@@ -975,7 +992,7 @@ export default function App() {
                       <div className="mt-5">
                         <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400 mb-2 block">VVIP Amenities included</h4>
                         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-stone-300">
-                          {selectedProperty?.highlights.map((highlight, hidx) => (
+                          {(Array.isArray(selectedProperty?.highlights) ? selectedProperty!.highlights : []).map((highlight, hidx) => (
                             <li key={hidx} className="flex items-center gap-1.5">
                               <span className="text-cyan-400">⚡</span>
                               <span>{highlight}</span>
