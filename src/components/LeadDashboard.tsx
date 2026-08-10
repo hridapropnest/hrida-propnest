@@ -215,8 +215,8 @@ export function LeadDashboard({
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Maximum image size is 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Maximum image size is 10MB.");
       return;
     }
 
@@ -225,25 +225,54 @@ export function LeadDashboard({
       if (e.target?.result) {
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 1920;
-          const scale = MAX_WIDTH / img.width;
+          let maxDim = 1200;
+          let quality = 0.85;
 
-          if (img.width > MAX_WIDTH) {
-            canvas.width = MAX_WIDTH;
-            canvas.height = img.height * scale;
-          } else {
-            canvas.width = img.width;
-            canvas.height = img.height;
+          const getCompressedDataUrl = (maxDimension: number, q: number): string => {
+            const canvas = document.createElement("canvas");
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+            }
+            return canvas.toDataURL("image/jpeg", q);
+          };
+
+          let compressed = getCompressedDataUrl(maxDim, quality);
+
+          // Firestore document property limit is 1,048,487 bytes.
+          // Iteratively optimize quality & resolution if base64 length exceeds 750KB.
+          while (compressed.length > 750000 && (quality > 0.35 || maxDim > 500)) {
+            if (quality > 0.45) {
+              quality -= 0.15;
+            } else {
+              maxDim -= 200;
+              quality = 0.75;
+            }
+            compressed = getCompressedDataUrl(maxDim, quality);
           }
 
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            // High-quality JPEG — luxury real estate images must be crisp
-            const compressed = canvas.toDataURL("image/jpeg", 0.97);
-            setPropImage(compressed);
+          if (compressed.length > 1000000) {
+            toast.error("Image is too large for database storage even after compression. Please use an external image URL.");
+            return;
           }
+
+          setPropImage(compressed);
         };
         img.src = e.target.result as string;
       }
@@ -319,6 +348,12 @@ export function LeadDashboard({
       highlights: [],
       pdfUrl: propPdfUrl,
     };
+
+    if (newPropertyObj.image && newPropertyObj.image.length > 1040000) {
+      toast.error("Image size exceeds database limits (1MB). Please re-upload the image or use an image URL.");
+      setSavingProperty(false);
+      return;
+    }
 
     // Write to Firebase first — onSnapshot will update the UI automatically
     try {
